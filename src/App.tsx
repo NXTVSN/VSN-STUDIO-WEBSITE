@@ -56,42 +56,42 @@ const SERVICES = [
   {
     id: '01',
     category: 'Concept Design',
-    desc: 'Initial architectural vision for residential and commercial spaces including spatial studies, massing concepts, and design direction.',
+    desc: 'Initial architectural vision, massing concepts, and strategic design direction.',
     image: 'https://picsum.photos/seed/conceptdesign/800/600',
     prompt: 'A minimalist architectural concept design sketch, clean lines, modern residential building, blueprint style, high contrast, professional architectural visualization.'
   },
   {
     id: '02',
     category: 'Space Planning & Layout',
-    desc: 'Functional planning of layouts including floor plans, circulation improvements, and spatial organization for homes and commercial environments.',
+    desc: 'Functional planning, flow optimization, and spatial organization for sophisticated environments.',
     image: 'https://picsum.photos/seed/spaceplanning/800/600',
     prompt: 'Top-down view of a modern open-concept floor plan, architectural layout, clean minimal lines, monochrome with subtle shading, professional space planning.'
   },
   {
     id: '03',
     category: 'Architectural Visualization',
-    desc: 'High-fidelity 3D modeling and photorealistic renderings that allow clients to experience their space before construction.',
+    desc: 'Photorealistic 3D modeling allowing clients to experience spaces before construction.',
     image: 'https://picsum.photos/seed/archviz/800/600',
     prompt: 'Photorealistic 3D architectural rendering of a modern concrete and glass home exterior at twilight, warm interior lighting, hyper-realistic, high-end real estate.'
   },
   {
     id: '04',
     category: 'Architectural Drawings',
-    desc: 'Development of dimensioned floor plans, elevations, and sections used to communicate the project clearly to contractors and builders.',
+    desc: 'Dimensioned plans, elevations, and sections to clearly direct contractors and builders.',
     image: 'https://picsum.photos/seed/archdrawings/800/600',
     prompt: 'Detailed architectural elevation drawing of a modern commercial building, technical lines, dimension lines, clean white background, professional drafting.'
   },
   {
     id: '05',
     category: 'Presentation Packages',
-    desc: 'Comprehensive visual presentations including renderings, diagrams, and design boards used for client approvals, investor presentations, or marketing materials.',
+    desc: 'Comprehensive visual boards and renderings for client approvals and investor pitches.',
     image: 'https://picsum.photos/seed/presentation/800/600',
     prompt: 'A beautifully arranged architectural presentation board, material samples, concrete, wood, fabric swatches, and small architectural sketches, top-down flatlay, soft lighting.'
   },
   {
     id: '06',
     category: 'Brand & Interior Design',
-    desc: 'When working with a brand, we handle the interior design of the project from vision to reality, including the branding and marketing usage for the build.',
+    desc: 'End-to-end interior design, seamlessly translating brand identity into physical built spaces.',
     image: 'https://picsum.photos/seed/branddesign/800/600',
     prompt: 'A modern retail interior space with cohesive branding, sleek minimalist design, warm lighting, professional architectural photography.'
   }
@@ -248,7 +248,12 @@ export default function App() {
             <button onClick={() => scrollTo('services')} className="hover:text-white/60 transition-colors hidden md:block">SERVICES</button>
             <button onClick={() => scrollTo('process')} className="hover:text-white/60 transition-colors hidden md:block">PROCESS</button>
             <button onClick={() => scrollTo('about')} className="hover:text-white/60 transition-colors hidden md:block">ABOUT</button>
-            <button onClick={() => setIsProjectStarterOpen(true)} className="hover:text-white/60 transition-colors hidden md:block">START A PROJECT</button>
+            <button 
+              onClick={() => setIsProjectStarterOpen(true)} 
+              className="bg-[#0f2c59] text-white px-4 py-2 rounded-full hover:bg-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all hidden md:block shadow-lg border border-[#1a3a6e]"
+            >
+              START A PROJECT
+            </button>
             <button aria-label="Menu" className="md:hidden"><Menu className="w-5 h-5" /></button>
           </div>
         </div>
@@ -258,6 +263,35 @@ export default function App() {
       <main id="home" className="pt-32 px-4 md:px-6 max-w-[1800px] mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 auto-rows-auto">
           
+          {/* Contact (Moved to Absolute Top) */}
+          <motion.section 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="col-span-1 md:col-span-12"
+          >
+            <div id="contact" onClick={() => setIsProjectStarterOpen(true)} className="w-full bg-[#0f2c59] text-white rounded-[2rem] p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center relative hover:bg-[#123161] hover:scale-[0.99] transition-all duration-300 cursor-pointer group shadow-[0_0_40px_rgba(15,44,89,0.3)] border border-[#1a3a6e]">
+              <div>
+                <div className="px-3 py-1.5 rounded-full bg-black/20 border border-white/10 text-[10px] font-bold tracking-widest uppercase text-white/70 inline-block mb-6">
+                  NEW INQUIRY
+                </div>
+                <h2 className="text-4xl md:text-5xl font-medium tracking-tight leading-[1.1]">
+                  Start Your Project
+                </h2>
+                <p className="text-sm font-medium text-white/70 max-w-md mt-4">
+                  Engage with our studio to begin developing your architectural vision.
+                </p>
+              </div>
+              <div className="mt-8 md:mt-0 flex items-center gap-4">
+                <span className="text-sm font-bold tracking-widest uppercase text-white/90 group-hover:text-white transition-colors">Initiate</span>
+                <div className="w-14 h-14 rounded-full bg-white text-[#0f2c59] flex items-center justify-center group-hover:-rotate-45 transition-transform duration-300 shadow-lg">
+                  <ArrowUpRight className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+          </motion.section>
+
           {/* Module 1: Title & Manifesto (4 cols) */}
           <div className="col-span-1 md:col-span-4 bg-[#121212] rounded-[2rem] border border-white/5 p-8 md:p-10 flex flex-col justify-between min-h-[400px] md:min-h-[60vh] relative group overflow-hidden shadow-2xl">
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
@@ -275,27 +309,25 @@ export default function App() {
                 Designing spaces and brands that tell a unified story.
               </p>
               <p className="text-sm font-light text-white/50 leading-relaxed max-w-sm mb-6">
-                VSN Studios is a multidisciplinary design studio that combines architectural design, spatial visualization, and brand thinking to create environments that communicate identity and atmosphere.
+                A multidisciplinary studio fusing architectural design, visualization, and brand thinking.
                 <br/><br/>
-                We collaborate with homeowners, businesses, and builders to design spaces that are not only functional, but meaningful experiences.
+                We partner with clients to design functional spaces driven by meaningful experiences.
               </p>
               <p className="text-[10px] font-medium tracking-widest uppercase text-white/40">
-                Residential Renovations &bull; Commercial Spaces &bull; Spatial Branding
+                Residential &bull; Commercial &bull; Branding
               </p>
             </div>
             
             <div className="mt-12 relative z-10 flex flex-wrap gap-4">
-              <button onClick={() => scrollTo('projects')} className="group/btn flex items-center gap-3 text-xs font-bold tracking-widest uppercase hover:text-white/70 transition-colors">
-                VIEW PROJECTS
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover/btn:bg-white/20 transition-colors">
-                  <ArrowRight className="w-4 h-4" />
-                </div>
-              </button>
-              <button onClick={() => setIsProjectStarterOpen(true)} className="group/btn flex items-center gap-3 text-xs font-bold tracking-widest uppercase hover:text-white/70 transition-colors">
+              <button 
+                onClick={() => setIsProjectStarterOpen(true)} 
+                className="group/btn flex items-center gap-3 text-xs font-bold tracking-widest uppercase bg-[#0f2c59] text-white px-4 py-2.5 rounded-full hover:bg-[#1a3a6e] hover:shadow-[0_0_20px_rgba(15,44,89,0.4)] transition-all border border-white/10"
+              >
                 START A PROJECT
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover/btn:bg-white/20 transition-colors">
-                  <ArrowUpRight className="w-4 h-4" />
-                </div>
+                <ArrowUpRight className="w-4 h-4 ml-1 opacity-80 group-hover/btn:rotate-45 transition-transform" />
+              </button>
+              <button onClick={() => scrollTo('projects')} className="group/btn flex items-center gap-3 text-xs font-bold tracking-widest uppercase hover:text-white/70 transition-colors px-2">
+                VIEW PROJECTS
               </button>
             </div>
           </div>
@@ -304,7 +336,7 @@ export default function App() {
           <div className="col-span-1 md:col-span-8 bg-[#121212] rounded-[2rem] border border-white/5 relative min-h-[400px] md:min-h-[60vh] overflow-hidden shadow-2xl group">
             <div className="absolute top-8 left-8 z-10">
               <div className="px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-widest uppercase text-white/70">
-                TIMELAPSE RENDER
+                LATEST RENDER
               </div>
             </div>
             <div className="absolute bottom-8 right-8 z-10 flex gap-2">
@@ -337,13 +369,10 @@ export default function App() {
                 ABOUT STUDIO
               </div>
               <p className="text-lg font-medium tracking-tight leading-snug mb-6">
-                Studio Visionary is an architectural design and visualization studio focused on transforming ideas into thoughtful, buildable spaces.
-              </p>
-              <p className="text-sm font-light text-white/50 leading-relaxed mb-4">
-                We work with homeowners, businesses, and builders to reimagine environments, refine spatial layouts, and visualize architectural concepts before construction begins.
+                Transforming ideas into buildable, thought-provoking spaces.
               </p>
               <p className="text-sm font-light text-white/50 leading-relaxed">
-                Our process combines architectural thinking, digital modeling, and visualization to help projects move from vision to reality with clarity and confidence.
+                We combine architectural thinking with high-end visualization to design environments with absolute clarity before construction begins.
               </p>
             </div>
           </div>
@@ -429,7 +458,7 @@ export default function App() {
                 DESIGNED FOR REAL SPACES
               </div>
               <p className="text-sm font-light text-white/60 leading-relaxed">
-                Every project is developed with both design and construction in mind. By combining architectural planning with visualization tools, we help clients understand their space before building begins. This reduces uncertainty and supports better decision-making throughout the design process.
+                Designed with construction in mind. Our visualizations eliminate uncertainty, ensuring confident decisions moving into the build phase.
               </p>
             </div>
           </div>
@@ -653,16 +682,16 @@ export default function App() {
                   </div>
                   <div className="space-y-8">
                     {[
-                      { step: '01', title: 'Discovery', desc: 'Understanding the vision, lifestyle needs, brand identity, or project opportunity.' },
-                      { step: '02', title: 'Concept Development', desc: 'Translating ideas into spatial concepts, architectural form, and layout strategies.' },
-                      { step: '03', title: 'Visualization', desc: 'Creating photorealistic renderings that allow the environment to be experienced before construction.' },
-                      { step: '04', title: 'Design Refinement', desc: 'Refining materials, proportions, lighting, and spatial relationships.' },
-                      { step: '05', title: 'Final Deliverables', desc: 'Providing drawings and visual materials that guide construction and implementation.' }
+                      { step: '01', title: 'Discovery', desc: 'Defining vision, needs, and project opportunity.' },
+                      { step: '02', title: 'Concept', desc: 'Translating ideas into spatial form and layout strategy.' },
+                      { step: '03', title: 'Visualization', desc: 'Crafting photorealistic renderings to experience the space.' },
+                      { step: '04', title: 'Refinement', desc: 'Perfecting materials, proportions, and lighting.' },
+                      { step: '05', title: 'Deliverables', desc: 'Generating final drawings to guide construction.' }
                     ].map((item) => (
                       <div key={item.step} className="flex gap-6">
                         <div className="text-xl md:text-2xl font-mono font-medium text-white/30 pt-0.5 transition-colors duration-500 group-hover:text-white/50">{item.step}</div>
                         <div>
-                          <h4 className="text-lg font-medium mb-2 transition-colors duration-500 group-hover:text-white">{item.title}</h4>
+                          <h4 className="text-lg font-medium mb-1 transition-colors duration-500 group-hover:text-white">{item.title}</h4>
                           <p className="text-sm font-light text-white/50 leading-relaxed transition-colors duration-500 group-hover:text-white/70">{item.desc}</p>
                         </div>
                       </div>
@@ -679,16 +708,16 @@ export default function App() {
                   </div>
                   <div className="space-y-10">
                     <div>
-                      <h4 className="text-2xl font-medium mb-3 transition-colors duration-500 group-hover:text-white">Homeowners</h4>
-                      <p className="text-base font-light text-white/50 leading-relaxed transition-colors duration-500 group-hover:text-white/70">Transforming homes through thoughtful renovations, spatial redesign, and architectural visualization.</p>
+                      <h4 className="text-2xl font-medium mb-2 transition-colors duration-500 group-hover:text-white">Homeowners</h4>
+                      <p className="text-base font-light text-white/50 leading-relaxed transition-colors duration-500 group-hover:text-white/70">Transforming homes through thoughtful renovations and spatial redesign.</p>
                     </div>
                     <div>
-                      <h4 className="text-2xl font-medium mb-3 transition-colors duration-500 group-hover:text-white">Business Owners & Brands</h4>
-                      <p className="text-base font-light text-white/50 leading-relaxed transition-colors duration-500 group-hover:text-white/70">Designing environments for restaurants, retail, hospitality, and branded experiences where space and identity work together.</p>
+                      <h4 className="text-2xl font-medium mb-2 transition-colors duration-500 group-hover:text-white">Brands & Retail</h4>
+                      <p className="text-base font-light text-white/50 leading-relaxed transition-colors duration-500 group-hover:text-white/70">Aligning spatial environments perfectly with brand identity.</p>
                     </div>
                     <div>
-                      <h4 className="text-2xl font-medium mb-3 transition-colors duration-500 group-hover:text-white">Builders & Developers</h4>
-                      <p className="text-base font-light text-white/50 leading-relaxed transition-colors duration-500 group-hover:text-white/70">Supporting builders with architectural concepts, visualization, and clear design communication for project presentations.</p>
+                      <h4 className="text-2xl font-medium mb-2 transition-colors duration-500 group-hover:text-white">Developers</h4>
+                      <p className="text-base font-light text-white/50 leading-relaxed transition-colors duration-500 group-hover:text-white/70">Strategic visualization and concepts for seamless presentations.</p>
                     </div>
                   </div>
                 </div>
@@ -720,39 +749,8 @@ export default function App() {
             </div>
           </motion.section>
 
-          {/* Contact */}
-          <motion.section 
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="mt-8 mb-24 col-span-1 md:col-span-12"
-          >
-            <div id="contact" onClick={() => setIsProjectStarterOpen(true)} className="w-full bg-white text-black rounded-[2rem] p-8 md:p-12 flex flex-col justify-between min-h-[300px] relative hover:scale-[0.98] transition-transform duration-300 cursor-pointer group shadow-2xl">
-              <div>
-                <div className="px-3 py-1.5 rounded-full bg-black/5 border border-black/10 text-[10px] font-bold tracking-widest uppercase text-black/50 inline-block mb-8">
-                  INITIATE
-                </div>
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight leading-[1.1]">
-                  Start a<br/>Project
-                </h2>
-              </div>
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-end mt-12 gap-8">
-                <p className="text-base font-medium text-black/60 max-w-sm leading-relaxed">
-                  Engage with our studio to begin developing your architectural vision.
-                </p>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm font-bold tracking-widest uppercase">Start Your Project</span>
-                  <div className="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center group-hover:-rotate-45 transition-transform duration-300 shadow-lg">
-                    <ArrowUpRight className="w-6 h-6" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-
           {/* Footer */}
-          <footer className="col-span-1 md:col-span-12 mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-white/40 tracking-widest uppercase">
+          <footer className="col-span-1 md:col-span-12 mt-12 mb-12 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-white/40 tracking-widest uppercase">
             <p>&copy; {new Date().getFullYear()} Studio Visionary. All rights reserved.</p>
             <div className="flex gap-6">
               <a href="#" className="hover:text-white transition-colors">Instagram</a>
