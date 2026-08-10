@@ -5,51 +5,76 @@
 
 import { motion, useScroll, useTransform, AnimatePresence, animate, useMotionValue } from 'motion/react';
 import { ArrowRight, Menu, ChevronLeft, ChevronRight, ArrowUpRight, Plus, Minus } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectStarter } from './components/ProjectStarter';
 import { Preloader } from './components/Preloader';
 
 const PROJECTS = [
   {
     id: 1,
-    title: 'Forest Glass Residence',
-    type: 'Residential Renovation',
-    location: 'New York',
-    sqft: '2,800 sq ft',
-    scope: 'Concept Design + Visualization',
-    image: 'https://picsum.photos/seed/interior_living/1920/1080',
+    title: 'Development',
+    type: '3D Modeling & Renderings',
+    location: 'California',
+    sqft: '56 homes',
+    scope: '3D Modeling, Renderings',
+    image: '/project1.jpeg',
     spec: '01'
   },
   {
     id: 2,
-    title: 'Lumina Retail Flagship',
-    type: 'Commercial',
-    location: 'Los Angeles',
-    sqft: '4,500 sq ft',
-    scope: 'Space Planning + Renderings',
-    image: 'https://picsum.photos/seed/interior_kitchen/1920/1080',
+    title: 'Basement Renovation',
+    type: 'Residential',
+    location: 'Staten Island, New York',
+    sqft: '1,400 sq ft',
+    scope: 'Full Interior Design + Build Out',
+    image: '/project2.jpeg',
     spec: '02'
   },
   {
     id: 3,
-    title: 'Oakwood Hospitality',
-    type: 'Hospitality',
-    location: 'Chicago',
-    sqft: '12,000 sq ft',
-    scope: 'Architectural Visualization',
-    image: 'https://picsum.photos/seed/interior_bed/1920/1080',
+    title: 'Golf Simulator',
+    type: 'Branding & Interior Design',
+    location: 'Brooklyn, New York',
+    sqft: '4,500 sq ft',
+    scope: 'Interior Design, Branding, 3D Modeling, Renderings',
+    image: '/project3.jpg',
     spec: '03'
   },
   {
     id: 4,
-    title: 'Horizon Office HQ',
-    type: 'Commercial Renovation',
-    location: 'Seattle',
-    sqft: '8,200 sq ft',
-    scope: 'Concept Design + Drawings',
-    image: 'https://picsum.photos/seed/interior_bath/1920/1080',
+    title: 'Kitchen Remodel',
+    type: 'Interior Design',
+    location: 'Staten Island, New York',
+    sqft: '225 sq ft',
+    scope: 'Full Design, Custom Millwork, Visualization',
+    image: '/project4.jpeg',
     spec: '04'
   }
+];
+
+const SYLVA_IMAGES = [
+  '/featuredwork.png?v=2',
+  '/sylva2.jpeg',
+  '/sylva3.jpeg',
+  '/sylva4.jpeg'
+];
+
+const GALLERY_SECTIONS = [
+  { id: "12", image: "/archive/archive-12.jpeg", span: "col-span-1 md:col-span-2 row-span-1 md:row-span-2" },
+  { id: "03", image: "/archive/archive-03.jpeg", span: "col-span-1 md:col-span-1 row-span-1 md:row-span-1" },
+  { id: "19", image: "/archive/archive-19.jpeg", span: "col-span-1 md:col-span-1 row-span-1 md:row-span-1" },
+  { id: "05", image: "/archive/archive-05.jpeg", span: "col-span-1 md:col-span-2 row-span-1 md:row-span-1" },
+  { id: "14", image: "/archive/archive-14 2.jpeg", span: "col-span-1 md:col-span-1 row-span-1 md:row-span-2" },
+  { id: "17", image: "/archive/archive-17.jpeg", span: "col-span-1 md:col-span-1 row-span-1 md:row-span-1" },
+  { id: "09", image: "/archive/archive-09.jpeg", span: "col-span-1 md:col-span-2 row-span-1 md:row-span-2" },
+  { id: "07", image: "/archive/archive-07.jpeg", span: "col-span-1 md:col-span-1 row-span-1 md:row-span-1" },
+  { id: "01", image: "/archive/archive-01.jpeg", span: "col-span-1 md:col-span-1 row-span-1 md:row-span-1" },
+  { id: "11", image: "/archive/archive-11.jpeg", span: "col-span-1 md:col-span-2 row-span-1 md:row-span-1" },
+  { id: "16", image: "/archive/archive-16 2.jpeg", span: "col-span-1 md:col-span-1 row-span-1 md:row-span-2" },
+  { id: "13", image: "/archive/archive-13.jpeg", span: "col-span-1 md:col-span-1 row-span-1 md:row-span-1" },
+  { id: "18", image: "/archive/archive-18.jpeg", span: "col-span-1 md:col-span-2 row-span-1 md:row-span-2" },
+  { id: "06", image: "/archive/archive-06.jpeg", span: "col-span-1 md:col-span-1 row-span-1 md:row-span-1" },
+  { id: "10", image: "/archive/archive-10.jpeg", span: "col-span-1 md:col-span-1 row-span-1 md:row-span-1" }
 ];
 
 const SERVICES = [
@@ -175,6 +200,27 @@ export default function App() {
   const [clientTypeIndex, setClientTypeIndex] = useState(0);
   const [generatedImages, setGeneratedImages] = useState<Record<string, string>>({});
 
+  const [currentSylvaSlide, setCurrentSylvaSlide] = useState(0);
+
+  const galleryRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: galleryScroll } = useScroll({
+    target: galleryRef,
+    offset: ["start end", "end start"]
+  });
+
+  const parallaxY1 = useTransform(galleryScroll, [0, 1], ["5%", "-10%"]);
+  const parallaxY2 = useTransform(galleryScroll, [0, 1], ["10%", "-5%"]);
+  const parallaxY3 = useTransform(galleryScroll, [0, 1], ["-5%", "10%"]);
+  const parallaxY4 = useTransform(galleryScroll, [0, 1], ["8%", "-8%"]);
+
+  const getParallaxY = (index: number) => {
+    const mod = index % 4;
+    if (mod === 0) return parallaxY1;
+    if (mod === 1) return parallaxY2;
+    if (mod === 2) return parallaxY3;
+    return parallaxY4;
+  };
+
   const handlePreloaderComplete = useCallback(() => {
     setIsLoading(false);
   }, []);
@@ -263,7 +309,7 @@ export default function App() {
       <main id="home" className="pt-32 px-4 md:px-6 max-w-[1800px] mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 auto-rows-auto">
           
-          {/* Contact (Moved to Absolute Top) */}
+          {/* Contact Form (Moved to Absolute Top, Inline) */}
           <motion.section 
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -293,27 +339,23 @@ export default function App() {
           </motion.section>
 
           {/* Module 1: Title & Manifesto (4 cols) */}
-          <div className="col-span-1 md:col-span-4 bg-[#121212] rounded-[2rem] border border-white/5 p-8 md:p-10 flex flex-col justify-between min-h-[400px] md:min-h-[60vh] relative group overflow-hidden shadow-2xl">
+          <div className="col-span-1 md:col-span-4 bg-[#111] rounded-none border border-white/20 p-8 md:p-10 flex flex-col justify-between min-h-[400px] md:min-h-[60vh] relative group overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
             
             <div className="relative z-10">
               <div className="flex justify-between items-start mb-12">
-                <div className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-widest uppercase text-white/70">
+                <div className="flex items-center gap-3 text-[9px] font-bold tracking-[0.2em] uppercase text-white/70">
+                  <div className="w-4 h-[1px] bg-white/50"></div>
                   VISION
                 </div>
               </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight leading-[1.05] mb-6">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tighter leading-[1.05] mb-6">
                 Architecture,<br/>Identity,<br/>Experience
               </h1>
-              <p className="text-base font-medium text-white/90 leading-relaxed max-w-sm mb-4">
-                Designing spaces and brands that tell a unified story.
+              <p className="text-sm font-light text-white/50 leading-relaxed max-w-sm mb-8">
+                A multidisciplinary studio fusing architectural design, visualization, and brand thinking. We partner with clients to design functional spaces driven by meaningful experiences.
               </p>
-              <p className="text-sm font-light text-white/50 leading-relaxed max-w-sm mb-6">
-                A multidisciplinary studio fusing architectural design, visualization, and brand thinking.
-                <br/><br/>
-                We partner with clients to design functional spaces driven by meaningful experiences.
-              </p>
-              <p className="text-[10px] font-medium tracking-widest uppercase text-white/40">
+              <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-white/40">
                 Residential &bull; Commercial &bull; Branding
               </p>
             </div>
@@ -321,13 +363,10 @@ export default function App() {
             <div className="mt-12 relative z-10 flex flex-wrap gap-4">
               <button 
                 onClick={() => setIsProjectStarterOpen(true)} 
-                className="group/btn flex items-center gap-3 text-xs font-bold tracking-widest uppercase bg-[#0f2c59] text-white px-4 py-2.5 rounded-full hover:bg-[#1a3a6e] hover:shadow-[0_0_20px_rgba(15,44,89,0.4)] transition-all border border-white/10"
+                className="group/btn flex items-center gap-3 text-[10px] font-bold tracking-[0.2em] uppercase bg-[#0f2c59] text-white px-5 py-3 rounded-full hover:bg-[#0c244a] transition-all border border-white/10"
               >
                 START A PROJECT
-                <ArrowUpRight className="w-4 h-4 ml-1 opacity-80 group-hover/btn:rotate-45 transition-transform" />
-              </button>
-              <button onClick={() => scrollTo('projects')} className="group/btn flex items-center gap-3 text-xs font-bold tracking-widest uppercase hover:text-white/70 transition-colors px-2">
-                VIEW PROJECTS
+                <ArrowUpRight className="w-4 h-4 opacity-80 group-hover/btn:rotate-45 transition-transform" />
               </button>
             </div>
           </div>
@@ -350,7 +389,7 @@ export default function App() {
             
             <div className="absolute inset-0 bg-black">
               <video 
-                src="/render.mp4" 
+                src="/BMW.mov" 
                 autoPlay 
                 loop 
                 muted 
@@ -468,7 +507,7 @@ export default function App() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="col-span-1 md:col-span-12 bg-[#121212] rounded-[2rem] border border-white/5 p-6 md:p-8 overflow-hidden relative shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 group"
+            className="col-span-1 md:col-span-12 bg-[#111] rounded-none border border-white/20 p-6 md:p-8 overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 group"
           >
             {/* Cyber/Grid Background */}
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:24px_24px] opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
@@ -497,11 +536,11 @@ export default function App() {
               </div>
             </div>
 
-            <div className="relative z-10 flex-1 w-full overflow-hidden md:border-l border-white/10 md:pl-8 pt-6 md:pt-0 border-t md:border-t-0" style={{ maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)' }}>
+            <div className="relative z-10 flex flex-1 overflow-hidden md:pl-8 pt-6 md:pt-0 border-t md:border-t-0 border-white/10 md:border-l" style={{ maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)' }}>
               <motion.div
                 animate={{ x: ["0%", "-50%"] }}
                 transition={{ repeat: Infinity, ease: "linear", duration: 20 }}
-                className="flex gap-8 text-sm md:text-base font-bold tracking-widest uppercase text-white/60 whitespace-nowrap items-center"
+                className="flex gap-8 text-xs md:text-sm font-bold tracking-[0.2em] uppercase text-white/50 whitespace-nowrap items-center"
               >
                 <span>HOMEOWNERS</span><span className="text-white/20">&bull;</span>
                 <span>BRANDS</span><span className="text-white/20">&bull;</span>
@@ -563,52 +602,19 @@ export default function App() {
             </div>
 
             <div className="flex flex-col border-t border-black/10 flex-grow">
-              {SERVICES.map((service, idx) => {
-                const isActive = activeService === idx;
-                return (
-                  <div
-                    key={service.id}
-                    className="border-b border-black/10 overflow-hidden"
-                  >
-                    <button
-                      onClick={() => setActiveService(isActive ? -1 : idx)}
-                      className="w-full py-5 flex items-center justify-between text-left group transition-colors hover:bg-black/5 px-2 md:px-4"
-                    >
-                      <div className="flex items-center gap-4 md:gap-6">
-                        <span className="text-sm font-medium text-black/40 group-hover:text-black transition-colors">{service.id}</span>
-                        <span className="text-lg md:text-xl font-medium tracking-tight uppercase">{service.category}</span>
-                      </div>
-                      <div className="w-8 h-8 rounded-full border border-black/10 flex items-center justify-center group-hover:bg-black group-hover:text-white transition-all duration-300 shrink-0">
-                        {isActive ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                      </div>
-                    </button>
-                    
-                    <AnimatePresence initial={false}>
-                      {isActive && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                        >
-                          <div className="px-2 md:px-4 pb-6 pt-2 flex flex-col gap-4">
-                            <p className="text-sm font-medium leading-relaxed text-black/70">
-                              {service.desc}
-                            </p>
-                            <div className="w-full h-[160px] rounded-xl overflow-hidden relative bg-black/5 shrink-0">
-                              <img 
-                                src={generatedImages[service.id] || service.image} 
-                                className="absolute inset-0 w-full h-full object-cover" 
-                                alt={service.category} 
-                              />
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+              {SERVICES.map((service) => (
+                <div
+                  key={service.id}
+                  className="border-b border-black/10 overflow-hidden"
+                >
+                  <div className="w-full py-5 flex items-center justify-between text-left group transition-colors hover:bg-black/5 px-2 md:px-4">
+                    <div className="flex items-center gap-4 md:gap-6">
+                      <span className="text-sm font-medium text-black/40 group-hover:text-black transition-colors">{service.id}</span>
+                      <span className="text-lg md:text-xl font-medium tracking-tight uppercase">{service.category}</span>
+                    </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </motion.section>
 
@@ -622,33 +628,52 @@ export default function App() {
           >
             <div className="relative w-full h-full min-h-[500px] rounded-[2rem] overflow-hidden group shadow-2xl flex-grow">
               {/* Note: Upload your image to the public folder and update this src to "/your-image-name.jpg" */}
-              <img 
-                src="/featuredwork.png?v=2" 
-                alt="SYLVA CIRCLE" 
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
-              />
+              <AnimatePresence mode="wait">
+                <motion.img 
+                  key={currentSylvaSlide}
+                  src={SYLVA_IMAGES[currentSylvaSlide]} 
+                  alt="SYLVA CIRCLE" 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.7 }}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+                />
+              </AnimatePresence>
               <div className="absolute inset-0 bg-black/40 transition-colors duration-700 group-hover:bg-black/20" />
               
-              <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-between z-10">
+              <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-between z-10 pointer-events-none">
                 <div className="flex justify-between items-center text-[10px] font-bold tracking-widest uppercase text-white">
                   <span className="px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10">FEATURED PROJECT</span>
-                  <span className="px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10">2780 SQFT</span>
                 </div>
                 
-                <div className="text-center mt-auto mb-8">
+                <div className="text-center mt-auto mb-8 pointer-events-auto">
                   <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.85] text-white">
                     SYLVA<br/>CIRCLE
                   </h2>
                 </div>
                 
-                <div className="flex justify-between items-end">
+                <div className="flex justify-between items-end pointer-events-auto">
                   <div className="flex gap-2">
                     <span className="px-3 py-1.5 rounded-full border border-white/30 backdrop-blur-md text-[10px] uppercase tracking-widest font-medium text-white">Architecture</span>
                     <span className="px-3 py-1.5 rounded-full border border-white/30 backdrop-blur-md text-[10px] uppercase tracking-widest font-medium text-white">Interior</span>
                   </div>
-                  <button className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-transform shrink-0">
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
+                  
+                  {/* Slider Controls */}
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setCurrentSylvaSlide((prev) => (prev - 1 + SYLVA_IMAGES.length) % SYLVA_IMAGES.length)}
+                      className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-colors shrink-0"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={() => setCurrentSylvaSlide((prev) => (prev + 1) % SYLVA_IMAGES.length)}
+                      className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:bg-white/80 transition-colors shrink-0"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -749,13 +774,56 @@ export default function App() {
             </div>
           </motion.section>
 
+          {/* Conceptual Imagery Gallery */}
+          <motion.section 
+            id="gallery"
+            ref={galleryRef}
+            className="mt-32 col-span-1 md:col-span-12 flex flex-col items-center justify-center min-h-[80vh] py-20 overflow-hidden"
+          >
+            <div className="text-center mb-16 px-4">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight mb-6 uppercase">
+                Conceptual Imagery
+              </h2>
+              <p className="text-lg font-light text-white/50 max-w-xl mx-auto">
+                An idea bank showcasing our versatile approach to spatial design, materials, and form.
+              </p>
+            </div>
+
+            <div className="w-full max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 px-4 md:px-8 grid-flow-row-dense auto-rows-[300px] md:auto-rows-[400px]">
+              {GALLERY_SECTIONS.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  style={{ y: getParallaxY(index) }}
+                  className={`group relative rounded-[12px] overflow-hidden bg-black shadow-lg cursor-pointer transition-all duration-[0.8s] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] hover:-translate-y-2 hover:shadow-[0_15px_35px_rgba(255,255,255,0.12)] ${item.span}`}
+                >
+                  <div className="absolute inset-0 bg-[#f0f0f0] overflow-hidden">
+                    <img 
+                      src={item.image} 
+                      alt="Conceptual Imagery" 
+                      className="w-full h-full object-cover transition-transform duration-[0.7s] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-105"
+                    />
+                  </div>
+                  
+                  {/* Clean Tim Fu Style Caption Overlay */}
+                  <div className="absolute inset-x-0 bottom-0 pt-16 pb-4 px-5 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex justify-between items-end pointer-events-none z-10 transition-opacity duration-500">
+                    <h3 className="text-[10px] md:text-xs font-medium text-[#cccccc] tracking-wider uppercase leading-none">
+                      Studio Visionary Conceptual Imagery
+                    </h3>
+                    <div className="text-[10px] md:text-xs font-light text-[#cccccc] tracking-wider leading-none">
+                      {item.id}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+
           {/* Footer */}
           <footer className="col-span-1 md:col-span-12 mt-12 mb-12 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-white/40 tracking-widest uppercase">
             <p>&copy; {new Date().getFullYear()} Studio Visionary. All rights reserved.</p>
             <div className="flex gap-6">
-              <a href="#" className="hover:text-white transition-colors">Instagram</a>
-              <a href="#" className="hover:text-white transition-colors">LinkedIn</a>
-              <a href="#" className="hover:text-white transition-colors">Twitter</a>
+              <a href="https://www.instagram.com/noahvilleroel/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Instagram</a>
+              <a href="https://www.linkedin.com/in/noahvilleroel/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">LinkedIn</a>
             </div>
           </footer>
 
