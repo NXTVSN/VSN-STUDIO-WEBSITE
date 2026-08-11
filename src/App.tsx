@@ -6,7 +6,7 @@
 import { motion, useScroll, useTransform, AnimatePresence, animate, useMotionValue } from 'motion/react';
 import { ArrowRight, Menu, ChevronLeft, ChevronRight, ArrowUpRight, Plus, Minus, X } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ProjectStarter } from './components/ProjectStarter';
+import { QuizModal } from './components/QuizModal';
 import { Preloader } from './components/Preloader';
 
 const PROJECTS = [
@@ -198,6 +198,8 @@ export default function App() {
   const [activeService, setActiveService] = useState(0);
   const [time, setTime] = useState(new Date().toLocaleTimeString('en-US', { hour12: false }));
   const [clientTypeIndex, setClientTypeIndex] = useState(0);
+  const [openService, setOpenService] = useState<string | null>(null);
+  const [activeProcessCard, setActiveProcessCard] = useState(0);
   const [generatedImages, setGeneratedImages] = useState<Record<string, string>>({});
   const [selectedGalleryImage, setSelectedGalleryImage] = useState<string | null>(null);
 
@@ -226,6 +228,7 @@ export default function App() {
     setIsLoading(false);
   }, []);
   const [isProjectStarterOpen, setIsProjectStarterOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const loadImages = async () => {
@@ -257,6 +260,19 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  const [isProcessDeckPaused, setIsProcessDeckPaused] = useState(false);
+
+  useEffect(() => {
+    if (isProcessDeckPaused) return;
+    const timer = setInterval(() => {
+      // We check window width to only shuffle on mobile, though the state updates globally.
+      if (window.innerWidth < 768) {
+        setActiveProcessCard((prev) => (prev + 1) % 3);
+      }
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [isProcessDeckPaused]);
+
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % PROJECTS.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + PROJECTS.length) % PROJECTS.length);
 
@@ -284,7 +300,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Floating Glass Navigation */}
-      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-5xl">
+      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-5xl">
         <div className="flex items-center justify-between px-6 py-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
           <div className="text-xs font-bold tracking-widest uppercase cursor-pointer" onClick={() => scrollTo('home')}>
             STUDIO VISIONARY
@@ -295,20 +311,86 @@ export default function App() {
             <button onClick={() => scrollTo('services')} className="hover:text-white/60 transition-colors hidden md:block">SERVICES</button>
             <button onClick={() => scrollTo('process')} className="hover:text-white/60 transition-colors hidden md:block">PROCESS</button>
             <button onClick={() => scrollTo('about')} className="hover:text-white/60 transition-colors hidden md:block">ABOUT</button>
+            <button onClick={() => scrollTo('gallery')} className="hover:text-white/60 transition-colors hidden md:block">IMAGERY</button>
             <button 
               onClick={() => setIsProjectStarterOpen(true)} 
               className="bg-[#0f2c59] text-white px-4 py-2 rounded-full hover:bg-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all hidden md:block shadow-lg border border-[#1a3a6e]"
             >
               START A PROJECT
             </button>
-            <button aria-label="Menu" className="md:hidden"><Menu className="w-5 h-5" /></button>
+            <button aria-label="Menu" className="md:hidden" onClick={() => setIsMobileMenuOpen(true)}>
+              <Menu className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </nav>
 
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed inset-0 z-[70] bg-[#0a0a0a]/95 backdrop-blur-xl flex flex-col pt-32 px-6 md:hidden"
+          >
+            <div className="flex flex-col gap-8 text-xl font-bold tracking-widest uppercase">
+              <button 
+                onClick={() => { scrollTo('home'); setIsMobileMenuOpen(false); }} 
+                className="text-left text-white/70 hover:text-white transition-colors"
+              >
+                HOME
+              </button>
+              <button 
+                onClick={() => { scrollTo('projects'); setIsMobileMenuOpen(false); }} 
+                className="text-left text-white/70 hover:text-white transition-colors"
+              >
+                PROJECTS
+              </button>
+              <button 
+                onClick={() => { scrollTo('services'); setIsMobileMenuOpen(false); }} 
+                className="text-left text-white/70 hover:text-white transition-colors"
+              >
+                SERVICES
+              </button>
+              <button 
+                onClick={() => { scrollTo('process'); setIsMobileMenuOpen(false); }} 
+                className="text-left text-white/70 hover:text-white transition-colors"
+              >
+                PROCESS
+              </button>
+              <button 
+                onClick={() => { scrollTo('about'); setIsMobileMenuOpen(false); }} 
+                className="text-left text-white/70 hover:text-white transition-colors"
+              >
+                ABOUT
+              </button>
+              <button 
+                onClick={() => { scrollTo('gallery'); setIsMobileMenuOpen(false); }} 
+                className="text-left text-white/70 hover:text-white transition-colors"
+              >
+                CONCEPTUAL IMAGERY
+              </button>
+              <button 
+                onClick={() => { setIsProjectStarterOpen(true); setIsMobileMenuOpen(false); }} 
+                className="bg-[#0f2c59] text-white px-6 py-4 rounded-full hover:bg-[#1a3a6e] transition-all text-center mt-4 border border-[#1a3a6e]"
+              >
+                START A PROJECT
+              </button>
+            </div>
+            <button 
+              className="absolute top-6 right-6 p-2 text-white/70 hover:text-white"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Modular Grid Layout */}
       <main id="home" className="pt-32 px-4 md:px-6 max-w-[1800px] mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 auto-rows-auto">
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-4 md:gap-6 auto-rows-auto grid-flow-row-dense">
           
           {/* Contact Form (Moved to Absolute Top, Inline) */}
           <motion.section 
@@ -316,64 +398,64 @@ export default function App() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="col-span-1 md:col-span-12"
+            className="col-span-2 md:col-span-12 sticky top-[72px] md:relative md:top-auto z-30"
           >
-            <div id="contact" onClick={() => setIsProjectStarterOpen(true)} className="w-full bg-[#0f2c59] text-white rounded-[2rem] p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center relative hover:bg-[#123161] hover:scale-[0.99] transition-all duration-300 cursor-pointer group shadow-[0_0_40px_rgba(15,44,89,0.3)] border border-[#1a3a6e]">
+            <div id="contact" onClick={() => setIsProjectStarterOpen(true)} className="w-full bg-[#0f2c59] text-white rounded-2xl md:rounded-[2rem] p-4 md:p-12 flex flex-row justify-between items-center relative hover:bg-[#123161] hover:scale-[0.99] transition-all duration-300 cursor-pointer group shadow-[0_0_40px_rgba(15,44,89,0.3)] border border-[#1a3a6e]">
               <div>
-                <div className="px-3 py-1.5 rounded-full bg-black/20 border border-white/10 text-[10px] font-bold tracking-widest uppercase text-white/70 inline-block mb-6">
+                <div className="hidden md:inline-block px-3 py-1.5 rounded-full bg-black/20 border border-white/10 text-[10px] font-bold tracking-widest uppercase text-white/70 mb-6">
                   NEW INQUIRY
                 </div>
-                <h2 className="text-4xl md:text-5xl font-medium tracking-tight leading-[1.1]">
+                <h2 className="text-xl md:text-5xl font-medium tracking-tight leading-[1.1]">
                   Start Your Project
                 </h2>
-                <p className="text-sm font-medium text-white/70 max-w-md mt-4">
+                <p className="hidden md:block text-sm font-medium text-white/70 max-w-md mt-4">
                   Engage with our studio to begin developing your architectural vision.
                 </p>
               </div>
-              <div className="mt-8 md:mt-0 flex items-center gap-4">
-                <span className="text-sm font-bold tracking-widest uppercase text-white/90 group-hover:text-white transition-colors">Initiate</span>
-                <div className="w-14 h-14 rounded-full bg-white text-[#0f2c59] flex items-center justify-center group-hover:-rotate-45 transition-transform duration-300 shadow-lg">
-                  <ArrowUpRight className="w-6 h-6" />
+              <div className="flex items-center gap-2 md:gap-4 mt-0">
+                <span className="hidden md:inline text-sm font-bold tracking-widest uppercase text-white/90 group-hover:text-white transition-colors">Initiate</span>
+                <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-white text-[#0f2c59] flex items-center justify-center group-hover:-rotate-45 transition-transform duration-300 shadow-lg">
+                  <ArrowUpRight className="w-5 h-5 md:w-6 md:h-6" />
                 </div>
               </div>
             </div>
           </motion.section>
 
           {/* Module 1: Title & Manifesto (4 cols) */}
-          <div className="col-span-1 md:col-span-4 bg-[#111] rounded-none border border-white/20 p-8 md:p-10 flex flex-col justify-between min-h-[400px] md:min-h-[60vh] relative group overflow-hidden">
+          <div className="col-span-2 md:col-span-4 bg-[#111] rounded-none border border-white/20 p-4 md:p-10 flex flex-col justify-between min-h-[150px] md:min-h-[60vh] relative group overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
             
             <div className="relative z-10">
-              <div className="flex justify-between items-start mb-12">
-                <div className="flex items-center gap-3 text-[9px] font-bold tracking-[0.2em] uppercase text-white/70">
-                  <div className="w-4 h-[1px] bg-white/50"></div>
+              <div className="flex justify-between items-start mb-6 md:mb-12">
+                <div className="flex items-center gap-2 md:gap-3 text-[8px] md:text-[9px] font-bold tracking-[0.2em] uppercase text-white/70">
+                  <div className="w-3 md:w-4 h-[1px] bg-white/50"></div>
                   VISION
                 </div>
               </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tighter leading-[1.05] mb-6">
+              <h1 className="text-xl md:text-5xl lg:text-6xl font-light tracking-tighter leading-[1.05] mb-4 md:mb-6">
                 Architecture,<br/>Identity,<br/>Experience
               </h1>
-              <p className="text-sm font-light text-white/50 leading-relaxed max-w-sm mb-8">
+              <p className="text-[10px] md:text-sm font-light text-white/50 leading-relaxed max-w-sm mb-4 md:mb-8">
                 A multidisciplinary studio fusing architectural design, visualization, and brand thinking. We partner with clients to design functional spaces driven by meaningful experiences.
               </p>
-              <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-white/40">
+              <p className="text-[8px] md:text-[9px] font-bold tracking-[0.2em] uppercase text-white/40">
                 Residential &bull; Commercial &bull; Branding
               </p>
             </div>
             
-            <div className="mt-12 relative z-10 flex flex-wrap gap-4">
+            <div className="mt-6 md:mt-12 relative z-10 flex flex-wrap gap-4">
               <button 
                 onClick={() => setIsProjectStarterOpen(true)} 
-                className="group/btn flex items-center gap-3 text-[10px] font-bold tracking-[0.2em] uppercase bg-[#0f2c59] text-white px-5 py-3 rounded-full hover:bg-[#0c244a] transition-all border border-white/10"
+                className="group/btn flex items-center gap-2 md:gap-3 text-[8px] md:text-[10px] font-bold tracking-[0.2em] uppercase bg-[#0f2c59] text-white px-4 md:px-5 py-2.5 md:py-3 rounded-full hover:bg-[#0c244a] transition-all border border-white/10"
               >
                 START A PROJECT
-                <ArrowUpRight className="w-4 h-4 opacity-80 group-hover/btn:rotate-45 transition-transform" />
+                <ArrowUpRight className="w-3 h-3 md:w-4 md:h-4 opacity-80 group-hover/btn:rotate-45 transition-transform" />
               </button>
             </div>
           </div>
 
           {/* Module 2: Video Render (8 cols) */}
-          <div className="col-span-1 md:col-span-8 bg-[#121212] rounded-[2rem] border border-white/5 relative min-h-[400px] md:min-h-[60vh] overflow-hidden shadow-2xl group">
+          <div className="col-span-2 md:col-span-8 bg-[#121212] rounded-[2rem] border border-white/5 relative min-h-[300px] md:min-h-[60vh] overflow-hidden shadow-2xl group">
             <div className="absolute top-8 left-8 z-10">
               <div className="px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-widest uppercase text-white/70">
                 LATEST RENDER
@@ -403,22 +485,22 @@ export default function App() {
           </div>
 
           {/* Module 3: About (3 cols) */}
-          <div id="about" className="col-span-1 md:col-span-3 bg-[#121212] rounded-[2rem] border border-white/5 p-8 md:p-10 flex flex-col justify-between min-h-[300px] relative shadow-2xl">
+          <div id="about" className="col-span-1 md:col-span-3 bg-[#121212] rounded-[1.5rem] md:rounded-[2rem] border border-white/5 p-5 md:p-10 flex flex-col justify-between min-h-[180px] md:min-h-[300px] relative shadow-2xl">
             <div>
-              <div className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-widest uppercase text-white/70 inline-block mb-8">
+              <div className="px-2 md:px-3 py-1 md:py-1.5 rounded-full bg-white/5 border border-white/10 text-[8px] md:text-[10px] font-bold tracking-widest uppercase text-white/70 inline-block mb-4 md:mb-8">
                 ABOUT STUDIO
               </div>
-              <p className="text-lg font-medium tracking-tight leading-snug mb-6">
+              <p className="text-sm md:text-lg font-medium tracking-tight leading-snug mb-2 md:mb-6">
                 Transforming ideas into buildable, thought-provoking spaces.
               </p>
-              <p className="text-sm font-light text-white/50 leading-relaxed">
+              <p className="hidden md:block text-xs md:text-sm font-light text-white/50 leading-relaxed">
                 We combine architectural thinking with high-end visualization to design environments with absolute clarity before construction begins.
               </p>
             </div>
           </div>
 
           {/* Module 4: Slideshow (6 cols) */}
-          <div id="projects" className="col-span-1 md:col-span-6 bg-[#121212] rounded-[2rem] border border-white/5 relative min-h-[400px] md:min-h-[300px] overflow-hidden group shadow-2xl">
+          <div id="projects" className="col-span-2 md:col-span-6 bg-[#121212] rounded-[2rem] border border-white/5 relative min-h-[400px] md:min-h-[300px] overflow-hidden group shadow-2xl">
             <div className="absolute top-8 left-8 z-20">
               <div className="px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-widest uppercase text-white/70">
                 SELECTED WORKS
@@ -434,8 +516,15 @@ export default function App() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover cursor-grab active:cursor-grabbing"
                 referrerPolicy="no-referrer"
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={(e, { offset }) => {
+                  if (offset.x < -50) nextSlide();
+                  else if (offset.x > 50) prevSlide();
+                }}
               />
             </AnimatePresence>
             
@@ -458,10 +547,10 @@ export default function App() {
             </div>
 
             {/* Slide Info */}
-            <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10">
+            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10">
               <div className="flex justify-between items-end">
                 <div>
-                  <h3 className="text-3xl font-medium tracking-tight mb-2">
+                  <h3 className="text-2xl md:text-3xl font-medium tracking-tight mb-2">
                     {PROJECTS[currentSlide].title}
                   </h3>
                   <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-medium text-white/70 mb-2">
@@ -471,7 +560,7 @@ export default function App() {
                     <span>&bull;</span>
                     <span>{PROJECTS[currentSlide].sqft}</span>
                   </div>
-                  <p className="text-sm font-light text-white/50">
+                  <p className="text-xs md:text-sm font-light text-white/50">
                     Scope: {PROJECTS[currentSlide].scope}
                   </p>
                 </div>
@@ -492,13 +581,16 @@ export default function App() {
           </div>
 
           {/* Module 5: Trust (3 cols) */}
-          <div className="col-span-1 md:col-span-3 bg-[#121212] rounded-[2rem] border border-white/5 p-8 md:p-10 flex flex-col justify-between min-h-[300px] relative shadow-2xl">
+          <div className="col-span-1 md:col-span-3 bg-[#121212] rounded-[1.5rem] md:rounded-[2rem] border border-white/5 p-5 md:p-10 flex flex-col justify-between min-h-[180px] md:min-h-[300px] relative shadow-2xl">
             <div>
-              <div className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-widest uppercase text-white/70 inline-block mb-8">
-                DESIGNED FOR REAL SPACES
+              <div className="px-2 md:px-3 py-1 md:py-1.5 rounded-full bg-white/5 border border-white/10 text-[8px] md:text-[10px] font-bold tracking-widest uppercase text-white/70 inline-block mb-4 md:mb-8">
+                REAL SPACES
               </div>
-              <p className="text-sm font-light text-white/60 leading-relaxed">
-                Designed with construction in mind. Our visualizations eliminate uncertainty, ensuring confident decisions moving into the build phase.
+              <p className="text-sm md:text-lg font-medium tracking-tight leading-snug mb-2 md:mb-6">
+                Designed with construction in mind.
+              </p>
+              <p className="hidden md:block text-xs md:text-sm font-light text-white/60 leading-relaxed">
+                Our visualizations eliminate uncertainty, ensuring confident decisions moving into the build phase.
               </p>
             </div>
           </div>
@@ -508,7 +600,7 @@ export default function App() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="col-span-1 md:col-span-12 bg-[#111] rounded-none border border-white/20 p-6 md:p-8 overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 group"
+            className="col-span-2 md:col-span-12 bg-[#111] rounded-none border border-white/20 p-6 md:p-8 overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 group"
           >
             {/* Cyber/Grid Background */}
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:24px_24px] opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
@@ -546,7 +638,7 @@ export default function App() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="mt-8 col-span-1 md:col-span-6 bg-white text-black rounded-[2rem] p-6 md:p-8 shadow-2xl flex flex-col"
+            className="mt-8 col-span-2 md:col-span-6 bg-white text-black rounded-[2rem] p-6 md:p-8 shadow-2xl flex flex-col"
           >
             <div className="flex flex-col justify-between items-start mb-8">
               <div className="flex items-center gap-4 text-xs font-bold tracking-widest uppercase mb-6">
@@ -591,12 +683,30 @@ export default function App() {
                   key={service.id}
                   className="border-b border-black/10 overflow-hidden"
                 >
-                  <div className="w-full py-5 flex items-center justify-between text-left group transition-colors hover:bg-black/5 px-2 md:px-4">
+                  <button
+                    onClick={() => setOpenService(openService === service.id ? null : service.id)}
+                    className="w-full py-5 flex items-center justify-between text-left group transition-colors hover:bg-black/5 px-2 md:px-4 cursor-pointer"
+                  >
                     <div className="flex items-center gap-4 md:gap-6">
                       <span className="text-sm font-medium text-black/40 group-hover:text-black transition-colors">{service.id}</span>
                       <span className="text-lg md:text-xl font-medium tracking-tight uppercase">{service.category}</span>
                     </div>
-                  </div>
+                    <div className="md:hidden">
+                      <ChevronRight className={`w-4 h-4 text-black/40 transition-transform ${openService === service.id ? 'rotate-90' : ''}`} />
+                    </div>
+                  </button>
+                  <AnimatePresence>
+                    {openService === service.id && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="md:hidden px-14 pb-5 overflow-hidden text-xs text-black/60 font-medium tracking-wide leading-relaxed"
+                      >
+                        {service.desc}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ))}
             </div>
@@ -608,7 +718,7 @@ export default function App() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="mt-8 col-span-1 md:col-span-6 flex"
+            className="mt-8 col-span-2 md:col-span-6 flex"
           >
             <div className="relative w-full h-full min-h-[500px] rounded-[2rem] overflow-hidden group shadow-2xl flex-grow">
               {/* Note: Upload your image to the public folder and update this src to "/your-image-name.jpg" */}
@@ -670,7 +780,7 @@ export default function App() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="mt-8 col-span-1 md:col-span-12 flex flex-col gap-12"
+            className="mt-8 col-span-2 md:col-span-12 flex flex-col gap-12"
           >
             {/* Section Header */}
             <div className="text-center md:text-left max-w-3xl px-4 md:px-0">
@@ -682,9 +792,15 @@ export default function App() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div 
+              className="relative h-[650px] md:h-auto w-full md:grid md:grid-cols-3 gap-6 md:gap-8 pb-4 md:pb-0"
+              onMouseEnter={() => setIsProcessDeckPaused(true)}
+              onMouseLeave={() => setIsProcessDeckPaused(false)}
+              onTouchStart={() => setIsProcessDeckPaused(true)}
+              onTouchEnd={() => setIsProcessDeckPaused(false)}
+            >
               {/* Process */}
-              <div className="group relative bg-[#121212] rounded-[2rem] p-8 md:p-12 border border-white/5 shadow-2xl overflow-hidden transition-all duration-500 hover:shadow-[0_8px_30px_rgba(255,255,255,0.04)] hover:-translate-y-1 hover:border-white/10">
+              <div className={`group absolute md:relative inset-x-0 bg-[#121212] rounded-[2rem] p-6 md:p-12 border border-white/5 shadow-2xl overflow-hidden transition-all duration-700 md:opacity-100 md:z-auto md:scale-100 md:translate-y-0 ${activeProcessCard === 0 ? 'z-30 opacity-100 scale-100 translate-y-0' : activeProcessCard === 1 ? 'z-10 opacity-0 scale-90 translate-y-8' : 'z-20 opacity-40 scale-95 translate-y-4'} md:hover:-translate-y-1 hover:border-white/10`}>
                 <div className="relative z-10">
                   <div className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-widest uppercase text-white/70 inline-block mb-12 transition-colors duration-500 group-hover:text-white group-hover:border-white/20">
                     OUR DESIGN PROCESS
@@ -701,7 +817,7 @@ export default function App() {
                         <div className="text-xl md:text-2xl font-mono font-medium text-white/30 pt-0.5 transition-colors duration-500 group-hover:text-white/50">{item.step}</div>
                         <div>
                           <h4 className="text-lg font-medium mb-1 transition-colors duration-500 group-hover:text-white">{item.title}</h4>
-                          <p className="text-sm font-light text-white/50 leading-relaxed transition-colors duration-500 group-hover:text-white/70">{item.desc}</p>
+                          <p className="text-xs md:text-sm font-light text-white/50 leading-relaxed transition-colors duration-500 group-hover:text-white/70">{item.desc}</p>
                         </div>
                       </div>
                     ))}
@@ -710,7 +826,7 @@ export default function App() {
               </div>
 
               {/* Client Types */}
-              <div className="group relative bg-[#121212] rounded-[2rem] p-8 md:p-12 border border-white/5 shadow-2xl overflow-hidden transition-all duration-500 hover:shadow-[0_8px_30px_rgba(255,255,255,0.04)] hover:-translate-y-1 hover:border-white/10">
+              <div className={`group absolute md:relative inset-x-0 bg-[#121212] rounded-[2rem] p-6 md:p-12 border border-white/5 shadow-2xl overflow-hidden transition-all duration-700 md:opacity-100 md:z-auto md:scale-100 md:translate-y-0 ${activeProcessCard === 1 ? 'z-30 opacity-100 scale-100 translate-y-0' : activeProcessCard === 2 ? 'z-10 opacity-0 scale-90 translate-y-8' : 'z-20 opacity-40 scale-95 translate-y-4'} md:hover:-translate-y-1 hover:border-white/10`}>
                 <div className="relative z-10">
                   <div className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-widest uppercase text-white/70 inline-block mb-12 transition-colors duration-500 group-hover:text-white group-hover:border-white/20">
                     WHO WE WORK WITH
@@ -733,7 +849,7 @@ export default function App() {
               </div>
 
               {/* Deliverables */}
-              <div className="group relative bg-[#121212] rounded-[2rem] p-8 md:p-12 border border-white/5 shadow-2xl overflow-hidden transition-all duration-500 hover:shadow-[0_8px_30px_rgba(255,255,255,0.04)] hover:-translate-y-1 hover:border-white/10">
+              <div className={`group absolute md:relative inset-x-0 bg-[#121212] rounded-[2rem] p-6 md:p-12 border border-white/5 shadow-2xl overflow-hidden transition-all duration-700 md:opacity-100 md:z-auto md:scale-100 md:translate-y-0 ${activeProcessCard === 2 ? 'z-30 opacity-100 scale-100 translate-y-0' : activeProcessCard === 0 ? 'z-10 opacity-0 scale-90 translate-y-8' : 'z-20 opacity-40 scale-95 translate-y-4'} md:hover:-translate-y-1 hover:border-white/10`}>
                 <div className="relative z-10">
                   <div className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-widest uppercase text-white/70 inline-block mb-10 transition-colors duration-500 group-hover:text-white group-hover:border-white/20">
                     PROJECT DELIVERABLES
@@ -762,10 +878,10 @@ export default function App() {
           <motion.section 
             id="gallery"
             ref={galleryRef}
-            className="mt-32 col-span-1 md:col-span-12 flex flex-col items-center justify-center min-h-[80vh] py-20 overflow-hidden"
+            className="mt-32 col-span-2 md:col-span-12 flex flex-col items-center justify-center min-h-[50vh] md:min-h-[80vh] py-20 overflow-hidden"
           >
             <div className="text-center mb-16 px-4">
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight mb-6 uppercase">
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-medium tracking-tight mb-6 uppercase">
                 Conceptual Imagery
               </h2>
               <p className="text-lg font-light text-white/50 max-w-xl mx-auto">
@@ -773,7 +889,7 @@ export default function App() {
               </p>
             </div>
 
-            <div className="w-full max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 px-4 md:px-8 grid-flow-row-dense auto-rows-[300px] md:auto-rows-[400px]">
+            <div className="w-full max-w-[1600px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 px-4 md:px-8 grid-flow-row-dense auto-rows-[180px] md:auto-rows-[400px]">
               {GALLERY_SECTIONS.map((item, index) => (
                 <motion.div
                   key={item.id}
@@ -801,7 +917,7 @@ export default function App() {
           </motion.section>
 
           {/* Footer */}
-          <footer className="col-span-1 md:col-span-12 mt-12 mb-12 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-white/40 tracking-widest uppercase">
+          <footer className="col-span-2 md:col-span-12 mt-12 mb-12 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-white/40 tracking-widest uppercase">
             <p>&copy; {new Date().getFullYear()} Studio Visionary. All rights reserved.</p>
             <div className="flex gap-6">
               <a href="https://www.instagram.com/noahvilleroel/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Instagram</a>
@@ -812,7 +928,7 @@ export default function App() {
         </div>
       </main>
 
-      <ProjectStarter 
+      <QuizModal 
         isOpen={isProjectStarterOpen} 
         onClose={() => setIsProjectStarterOpen(false)} 
       />
