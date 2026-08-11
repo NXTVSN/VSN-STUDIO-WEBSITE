@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
 
 export default function SeoLanding() {
   useEffect(() => {
@@ -89,7 +88,10 @@ export default function SeoLanding() {
           <p className="text-black/60 mb-8 max-w-2xl text-lg">
             Whether you're looking for a top-rated interior designer for a home renovation or a full-scale architectural firm for a commercial build, contact us today to secure your consultation.
           </p>
-          <button className="bg-black text-white px-8 py-4 text-xs font-bold tracking-[0.2em] uppercase hover:bg-black/80 transition-colors">
+          <button
+            onClick={() => window.open('https://calendly.com/nextvisionarydesign/30min', '_blank')}
+            className="bg-black text-white px-8 py-4 text-xs font-bold tracking-[0.2em] uppercase hover:bg-black/80 transition-colors"
+          >
             Request an Architectural Consultation
           </button>
         </section>

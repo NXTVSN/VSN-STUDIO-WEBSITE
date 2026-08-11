@@ -4,7 +4,7 @@
  */
 
 import { motion, useScroll, useTransform, AnimatePresence, animate, useMotionValue } from 'motion/react';
-import { ArrowRight, Menu, ChevronLeft, ChevronRight, ArrowUpRight, Plus, Minus } from 'lucide-react';
+import { ArrowRight, Menu, ChevronLeft, ChevronRight, ArrowUpRight, Plus, Minus, X } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectStarter } from './components/ProjectStarter';
 import { Preloader } from './components/Preloader';
@@ -199,6 +199,7 @@ export default function App() {
   const [time, setTime] = useState(new Date().toLocaleTimeString('en-US', { hour12: false }));
   const [clientTypeIndex, setClientTypeIndex] = useState(0);
   const [generatedImages, setGeneratedImages] = useState<Record<string, string>>({});
+  const [selectedGalleryImage, setSelectedGalleryImage] = useState<string | null>(null);
 
   const [currentSylvaSlide, setCurrentSylvaSlide] = useState(0);
 
@@ -513,27 +514,10 @@ export default function App() {
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:24px_24px] opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#121212] via-transparent to-[#121212] pointer-events-none" />
             
-            <div className="relative z-10 flex items-center gap-8 md:gap-16 w-full md:w-auto justify-between md:justify-start">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Projects</span>
-                <div className="text-4xl md:text-5xl font-light tracking-tighter font-mono text-white">
-                  <AnimatedNumber value={150} />+
-                </div>
-              </div>
-              <div className="w-[1px] h-12 bg-white/10 hidden md:block" />
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Years</span>
-                <div className="text-4xl md:text-5xl font-light tracking-tighter font-mono text-white">
-                  <AnimatedNumber value={12} />
-                </div>
-              </div>
-              <div className="w-[1px] h-12 bg-white/10 hidden md:block" />
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Awards</span>
-                <div className="text-4xl md:text-5xl font-light tracking-tighter font-mono text-white">
-                  <AnimatedNumber value={24} />
-                </div>
-              </div>
+            <div className="relative z-10 flex items-center justify-center md:justify-start w-full md:w-auto">
+              <h2 className="text-3xl md:text-5xl font-medium tracking-tight text-[#1a3a6e] uppercase text-center md:text-left drop-shadow-[0_0_20px_rgba(26,58,110,0.5)]">
+                FROM VISION TO REALITY
+              </h2>
             </div>
 
             <div className="relative z-10 flex flex-1 overflow-hidden md:pl-8 pt-6 md:pt-0 border-t md:border-t-0 border-white/10 md:border-l" style={{ maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)' }}>
@@ -794,6 +778,7 @@ export default function App() {
                 <motion.div
                   key={item.id}
                   style={{ y: getParallaxY(index) }}
+                  onClick={() => setSelectedGalleryImage(item.image)}
                   className={`group relative rounded-[12px] overflow-hidden bg-black shadow-lg cursor-pointer transition-all duration-[0.8s] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] hover:-translate-y-2 hover:shadow-[0_15px_35px_rgba(255,255,255,0.12)] ${item.span}`}
                 >
                   <div className="absolute inset-0 bg-[#f0f0f0] overflow-hidden">
@@ -805,13 +790,10 @@ export default function App() {
                   </div>
                   
                   {/* Clean Tim Fu Style Caption Overlay */}
-                  <div className="absolute inset-x-0 bottom-0 pt-16 pb-4 px-5 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex justify-between items-end pointer-events-none z-10 transition-opacity duration-500">
+                  <div className="absolute inset-x-0 bottom-0 pt-16 pb-4 px-5 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex justify-start items-end pointer-events-none z-10 transition-opacity duration-500">
                     <h3 className="text-[10px] md:text-xs font-medium text-[#cccccc] tracking-wider uppercase leading-none">
                       Studio Visionary Conceptual Imagery
                     </h3>
-                    <div className="text-[10px] md:text-xs font-light text-[#cccccc] tracking-wider leading-none">
-                      {item.id}
-                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -834,6 +816,35 @@ export default function App() {
         isOpen={isProjectStarterOpen} 
         onClose={() => setIsProjectStarterOpen(false)} 
       />
+
+      <AnimatePresence>
+        {selectedGalleryImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4"
+            onClick={() => setSelectedGalleryImage(null)}
+          >
+            <button 
+              className="absolute top-6 right-6 md:top-10 md:right-10 text-white/70 hover:text-white bg-black/40 hover:bg-black/60 rounded-full p-2 transition-colors z-[110]"
+              onClick={() => setSelectedGalleryImage(null)}
+            >
+              <X className="w-8 h-8" />
+            </button>
+            <motion.img
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              src={selectedGalleryImage}
+              alt="Conceptual Imagery Full Size"
+              className="w-full h-full object-contain cursor-default"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

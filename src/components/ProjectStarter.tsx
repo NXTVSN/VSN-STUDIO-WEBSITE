@@ -26,7 +26,32 @@ export function ProjectStarter({ isOpen, onClose }: ProjectStarterProps) {
     }
   };
 
-  const nextStep = () => setStep(s => Math.min(s + 1, 4));
+  const submittedRef = useRef(false);
+
+  const submitLead = () => {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
+    const eventId = `lead_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        'form-name': 'lead',
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        description: formData.description,
+      }).toString(),
+    }).catch(() => {});
+    const fbq = (window as any).fbq;
+    if (fbq) fbq('track', 'Lead', {}, { eventID: eventId });
+  };
+
+  const nextStep = () =>
+    setStep(s => {
+      if (s === 2) submitLead();
+      return Math.min(s + 1, 4);
+    });
   const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
   const handleClose = () => {
@@ -35,6 +60,7 @@ export function ProjectStarter({ isOpen, onClose }: ProjectStarterProps) {
       setStep(1);
       setFormData({ name: '', email: '', phone: '', description: '' });
       setImages([]);
+      submittedRef.current = false;
     }, 300); // Wait for exit animation
   };
 
@@ -45,13 +71,13 @@ export function ProjectStarter({ isOpen, onClose }: ProjectStarterProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 md:p-8"
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 md:p-8"
         >
           <button
             onClick={handleClose}
-            className="absolute top-6 right-6 md:top-10 md:right-10 text-white/50 hover:text-white transition-colors"
+            className="absolute top-4 right-4 md:top-10 md:right-10 text-white/70 hover:text-white transition-colors z-[130] bg-black/40 hover:bg-black/60 p-2 rounded-full backdrop-blur-md"
           >
-            <X className="w-8 h-8" />
+            <X className="w-6 h-6 md:w-8 md:h-8" />
           </button>
 
           <motion.div
@@ -59,10 +85,10 @@ export function ProjectStarter({ isOpen, onClose }: ProjectStarterProps) {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 40, opacity: 0 }}
             transition={{ delay: 0.1, type: 'spring', damping: 25, stiffness: 200 }}
-            className="w-full max-w-4xl bg-[#121212] rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl flex flex-col md:flex-row min-h-[600px]"
+            className="w-full max-w-4xl bg-[#121212] rounded-[1.5rem] md:rounded-[2rem] border border-white/10 overflow-y-auto md:overflow-hidden shadow-2xl flex flex-col md:flex-row h-[90vh] md:h-auto md:min-h-[600px] md:max-h-[90vh] relative mt-12 md:mt-0"
           >
             {/* Left Sidebar - Progress */}
-            <div className="w-full md:w-1/3 bg-white/5 p-8 md:p-12 flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/10">
+            <div className="w-full md:w-1/3 bg-white/5 p-6 md:p-12 flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/10 shrink-0">
               <div>
                 <div className="text-[10px] font-bold tracking-widest uppercase text-white/40 mb-12">
                   Project Initiation
@@ -95,7 +121,7 @@ export function ProjectStarter({ isOpen, onClose }: ProjectStarterProps) {
             </div>
 
             {/* Right Content Area */}
-            <div className="w-full md:w-2/3 p-8 md:p-12 flex flex-col relative">
+            <div className="w-full md:w-2/3 p-6 md:p-12 flex flex-col relative shrink-0 min-h-[500px]">
               <AnimatePresence mode="wait">
                 {step === 1 && (
                   <motion.div
@@ -222,7 +248,7 @@ export function ProjectStarter({ isOpen, onClose }: ProjectStarterProps) {
                         Click below to open our calendar and secure your preferred time slot.
                       </p>
                       <button 
-                        onClick={() => window.open('https://calendly.com', '_blank')}
+                        onClick={() => window.open('https://calendly.com/nextvisionarydesign/30min', '_blank')}
                         className="bg-white text-black px-6 py-3 rounded-full text-sm font-bold tracking-widest uppercase hover:bg-white/90 transition-colors flex items-center gap-2"
                       >
                         Open Calendar <ArrowUpRight className="w-4 h-4" />
