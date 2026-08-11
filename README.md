@@ -1,4 +1,4 @@
-# Next Visionary Design — Studio Website
+# VSN STUDIO VISIONARY — Studio Website
 
 Marketing site for Next Visionary Design, an architectural design studio.
 Live at https://studiovisionary.netlify.app/ (deployed via Netlify from this repo).
