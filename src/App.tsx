@@ -311,7 +311,7 @@ export default function App() {
             <button onClick={() => scrollTo('services')} className="hover:text-white/60 transition-colors hidden md:block">SERVICES</button>
             <button onClick={() => scrollTo('process')} className="hover:text-white/60 transition-colors hidden md:block">PROCESS</button>
             <button onClick={() => scrollTo('about')} className="hover:text-white/60 transition-colors hidden md:block">ABOUT</button>
-            <button onClick={() => scrollTo('gallery')} className="hover:text-white/60 transition-colors hidden md:block">IMAGERY</button>
+            <button onClick={() => scrollTo('gallery')} className="hover:text-white/60 transition-colors hidden md:block">OUR WORK</button>
             <button 
               onClick={() => setIsProjectStarterOpen(true)} 
               className="bg-[#0f2c59] text-white px-4 py-2 rounded-full hover:bg-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all hidden md:block shadow-lg border border-[#1a3a6e]"
@@ -369,7 +369,7 @@ export default function App() {
                 onClick={() => { scrollTo('gallery'); setIsMobileMenuOpen(false); }} 
                 className="text-left text-white/70 hover:text-white transition-colors"
               >
-                CONCEPTUAL IMAGERY
+                OUR WORK
               </button>
               <button 
                 onClick={() => { setIsProjectStarterOpen(true); setIsMobileMenuOpen(false); }} 
@@ -600,11 +600,11 @@ export default function App() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="col-span-2 md:col-span-12 bg-[#111] rounded-none border border-white/20 p-6 md:p-8 overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 group"
+            className="col-span-2 md:col-span-12 bg-transparent md:bg-[#111] rounded-none border border-transparent md:border-white/20 p-6 md:p-8 overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 group"
           >
             {/* Cyber/Grid Background */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:24px_24px] opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#121212] via-transparent to-[#121212] pointer-events-none" />
+            <div className="hidden md:block absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:24px_24px] opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
+            <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-[#121212] via-transparent to-[#121212] pointer-events-none" />
             
             <div className="relative z-10 flex items-center justify-center md:justify-start w-full md:w-auto">
               <h2 className="text-3xl md:text-5xl font-medium tracking-tight text-[#1a3a6e] uppercase text-center md:text-left drop-shadow-[0_0_20px_rgba(26,58,110,0.5)]">
@@ -874,7 +874,7 @@ export default function App() {
             </div>
           </motion.section>
 
-          {/* Conceptual Imagery Gallery */}
+          {/* Our Work Gallery */}
           <motion.section 
             id="gallery"
             ref={galleryRef}
@@ -882,7 +882,7 @@ export default function App() {
           >
             <div className="text-center mb-16 px-4">
               <h2 className="text-3xl md:text-5xl lg:text-6xl font-medium tracking-tight mb-6 uppercase">
-                Conceptual Imagery
+                Our Work
               </h2>
               <p className="text-lg font-light text-white/50 max-w-xl mx-auto">
                 An idea bank showcasing our versatile approach to spatial design, materials, and form.
@@ -900,7 +900,7 @@ export default function App() {
                   <div className="absolute inset-0 bg-[#f0f0f0] overflow-hidden">
                     <img 
                       src={item.image} 
-                      alt="Conceptual Imagery" 
+                      alt="Studio Visionary Imagery" 
                       className="w-full h-full object-cover transition-transform duration-[0.7s] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-105"
                     />
                   </div>
@@ -908,7 +908,7 @@ export default function App() {
                   {/* Clean Tim Fu Style Caption Overlay */}
                   <div className="absolute inset-x-0 bottom-0 pt-16 pb-4 px-5 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex justify-start items-end pointer-events-none z-10 transition-opacity duration-500">
                     <h3 className="text-[10px] md:text-xs font-medium text-[#cccccc] tracking-wider uppercase leading-none">
-                      Studio Visionary Conceptual Imagery
+                      STUDIO VISIONARY IMAGERY
                     </h3>
                   </div>
                 </motion.div>
@@ -920,6 +920,8 @@ export default function App() {
           <footer className="col-span-2 md:col-span-12 mt-12 mb-12 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-white/40 tracking-widest uppercase">
             <p>&copy; {new Date().getFullYear()} Studio Visionary. All rights reserved.</p>
             <div className="flex gap-6">
+              <a href="/privacy-policy" className="hover:text-white transition-colors">Privacy</a>
+              <a href="/terms" className="hover:text-white transition-colors">Terms</a>
               <a href="https://www.instagram.com/noahvilleroel/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Instagram</a>
               <a href="https://www.linkedin.com/in/noahvilleroel/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">LinkedIn</a>
             </div>
@@ -954,7 +956,7 @@ export default function App() {
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               src={selectedGalleryImage}
-              alt="Conceptual Imagery Full Size"
+              alt="Studio Visionary Imagery Full Size"
               className="w-full h-full object-contain cursor-default"
               onClick={(e) => e.stopPropagation()}
             />

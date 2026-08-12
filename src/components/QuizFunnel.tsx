@@ -82,7 +82,7 @@ export function QuizFunnel() {
       (window as any).fbq('track', 'Lead');
     }
 
-    setStep(5);
+    window.location.href = `/thank-you?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&projectType=${encodeURIComponent(projectType)}`;
   };
 
   const getPercent = () => {
@@ -110,10 +110,10 @@ export function QuizFunnel() {
           <button
             key={opt}
             onClick={() => handleOptionClick(1, 'projectType', opt)}
-            className="w-full text-left p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-[#0f2c59] hover:border-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all duration-300 flex justify-between items-center group"
+            className="w-full text-left p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-[#1a3a6e] active:bg-[#1a3a6e] hover:border-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all duration-300 flex justify-between items-center group"
           >
-            <span className="text-sm font-medium">{opt}</span>
-            <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <span className="text-sm font-medium text-white">{opt}</span>
+            <ArrowRight className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
         ))}
       </div>
@@ -135,10 +135,10 @@ export function QuizFunnel() {
           <button
             key={opt}
             onClick={() => handleOptionClick(2, 'budget', opt)}
-            className="w-full text-left p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-[#0f2c59] hover:border-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all duration-300 flex justify-between items-center group"
+            className="w-full text-left p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-[#1a3a6e] active:bg-[#1a3a6e] hover:border-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all duration-300 flex justify-between items-center group"
           >
-            <span className="text-sm font-medium">{opt}</span>
-            <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <span className="text-sm font-medium text-white">{opt}</span>
+            <ArrowRight className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
         ))}
       </div>
@@ -160,10 +160,10 @@ export function QuizFunnel() {
           <button
             key={opt}
             onClick={() => handleOptionClick(3, 'timeline', opt)}
-            className="w-full text-left p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-[#0f2c59] hover:border-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all duration-300 flex justify-between items-center group"
+            className="w-full text-left p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-[#1a3a6e] active:bg-[#1a3a6e] hover:border-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all duration-300 flex justify-between items-center group"
           >
-            <span className="text-sm font-medium">{opt}</span>
-            <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <span className="text-sm font-medium text-white">{opt}</span>
+            <ArrowRight className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
         ))}
       </div>
@@ -223,7 +223,7 @@ export function QuizFunnel() {
       <button
         onClick={handleSubmit}
         disabled={!isStep4Valid}
-        className="w-full bg-white text-black border border-transparent font-bold tracking-widest uppercase py-4 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0f2c59] hover:text-white hover:border-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all duration-300 flex justify-center items-center gap-2 text-xs"
+        className="w-full bg-white text-black border border-transparent font-bold tracking-widest uppercase py-4 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1a3a6e] active:bg-[#1a3a6e] hover:text-white hover:border-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all duration-300 flex justify-center items-center gap-2 text-xs"
       >
         GET MY FREE CONSULTATION <ArrowRight className="w-4 h-4" />
       </button>
@@ -233,41 +233,9 @@ export function QuizFunnel() {
     </motion.div>
   );
 
-  const renderStep5 = () => {
-    const firstName = name.split(' ')[0] || 'there';
-    const calendlyUrl = `https://calendly.com/nextvisionarydesign/30min?hide_gdpr_banner=1&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`;
-    
-    return (
-      <motion.div
-        key="step5"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        className="flex flex-col h-full items-center text-center w-full"
-      >
-        <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-6">
-          <CheckCircle2 className="w-6 h-6 text-white" />
-        </div>
-        <h3 className="text-2xl md:text-3xl font-medium tracking-tight mb-2">You're in, {firstName}.</h3>
-        <p className="text-white/60 text-sm font-light mb-8 max-w-sm mx-auto">
-          Book your free 30-minute consultation now and we'll come prepared with ideas for your {projectType.toLowerCase() || 'project'}.
-        </p>
-        
-        <div className="w-full h-[500px] md:h-[620px] rounded-xl overflow-hidden bg-white/5 border border-white/10">
-          <iframe 
-            src={calendlyUrl} 
-            width="100%" 
-            height="100%" 
-            frameBorder="0"
-            title="Book Consultation"
-          />
-        </div>
-      </motion.div>
-    );
-  };
 
   return (
-    <div id="quiz" className="w-full bg-[#121212] rounded-[2rem] border border-white/10 p-6 md:p-8 flex flex-col relative overflow-hidden shadow-2xl">
+    <div id="quiz" className="w-full bg-[#121212] rounded-[2rem] border border-[#1a3a6e] p-6 md:p-8 flex flex-col relative overflow-hidden shadow-2xl">
       {step < 5 && (
         <div className="w-full mb-8">
           <div className="flex justify-between items-center text-[10px] font-bold tracking-widest uppercase text-white/40 mb-3">
@@ -299,7 +267,6 @@ export function QuizFunnel() {
           {step === 2 && renderStep2()}
           {step === 3 && renderStep3()}
           {step === 4 && renderStep4()}
-          {step === 5 && renderStep5()}
         </AnimatePresence>
       </div>
     </div>

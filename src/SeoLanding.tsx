@@ -27,20 +27,37 @@ export default function SeoLanding() {
   };
 
   return (
-    <div className="bg-[#111] min-h-screen text-white font-sans selection:bg-white/30 selection:text-white pb-20">
-      <header className="p-6 md:p-8 border-b border-white/10 sticky top-0 bg-[#111]/90 backdrop-blur-md z-50">
-        <div className="max-w-[1400px] mx-auto text-xs font-bold tracking-widest uppercase">
-          STUDIO VISIONARY
+    <div className="bg-[#111] min-h-screen text-white font-sans selection:bg-white/30 selection:text-white pb-20 relative overflow-hidden">
+      {/* Subtle Background Image */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-[#111]/90 mix-blend-multiply z-10" />
+        <img 
+          src="/og-image.jpg" 
+          alt="" 
+          className="w-full h-full object-cover opacity-10 mix-blend-luminosity"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#111] via-transparent to-[#111] z-20" />
+      </div>
+
+      <header className="p-6 md:p-8 border-b border-white/10 sticky top-0 bg-[#111]/90 backdrop-blur-md z-50 flex justify-between items-center relative">
+        <div className="max-w-[1400px] w-full mx-auto flex justify-between items-center">
+          <div className="text-xs font-bold tracking-widest uppercase">
+            STUDIO VISIONARY
+          </div>
+          <div className="flex gap-4 text-[10px] font-bold tracking-widest uppercase text-white/50">
+            <a href="https://www.instagram.com/noahvilleroel/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Instagram</a>
+            <a href="https://www.linkedin.com/in/noahvilleroel/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">LinkedIn</a>
+          </div>
         </div>
       </header>
       
-      <main className="w-full">
+      <main className="w-full relative z-10">
         <section className="w-full max-w-[1400px] mx-auto p-6 md:p-12 lg:p-16 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-start min-h-[80vh]">
           <div className="flex flex-col pt-4 lg:pt-12">
             <div className="self-start px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-widest uppercase text-white/70 mb-6">
               Planning a renovation or new build?
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tighter mb-6 leading-[1.1]">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tighter mb-6 leading-[1.1] text-[#1a3a6e]">
               Get a Free 30-Minute Design Consultation + Initial Quote
             </h1>
             <p className="text-lg text-white/50 font-light mb-10 max-w-xl">
@@ -71,68 +88,16 @@ export default function SeoLanding() {
             <QuizFunnel />
           </div>
         </section>
-
-        <section className="max-w-[1400px] mx-auto p-6 md:p-12 lg:p-16 mt-12 border-t border-white/10">
-          <h2 className="text-2xl tracking-[0.2em] uppercase font-bold text-white/70 mb-8 border-l-2 border-white pl-4">
-            Our Expertise in Construction & Development
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <article className="bg-white/5 p-8 border border-white/10 rounded-[2rem]">
-              <h3 className="text-xl font-medium mb-3">Custom Home Design & Build</h3>
-              <p className="text-white/60 font-light leading-relaxed">
-                As premier custom home builders, we handle every phase of residential architecture. From initial concept and architectural visualization to final construction, our luxury home remodeling services ensure your vision becomes a high-end reality.
-              </p>
-            </article>
-            <article className="bg-white/5 p-8 border border-white/10 rounded-[2rem]">
-              <h3 className="text-xl font-medium mb-3">Commercial Construction & Branding</h3>
-              <p className="text-white/60 font-light leading-relaxed">
-                Elevate your business with our commercial interior design and spatial branding. We partner with real estate developers and retail brands to construct immersive environments that drive customer engagement and reflect modern architectural principles.
-              </p>
-            </article>
-          </div>
-        </section>
-
-        <section className="max-w-[1400px] mx-auto p-6 md:p-12 lg:p-16">
-          <h2 className="text-2xl tracking-[0.2em] uppercase font-bold text-white/70 mb-8 border-l-2 border-white pl-4">
-            Comprehensive Architectural Services
-          </h2>
-          <ul className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              "3D Architectural Rendering",
-              "Luxury Interior Decorating",
-              "Home Addition & Extension",
-              "Kitchen & Bath Remodeling",
-              "Structural Engineering Consultation",
-              "Permit & Zoning Acquisition",
-              "Sustainable & Green Building",
-              "Landscape Architecture",
-              "Retail Space Optimization"
-            ].map((service, i) => (
-              <li key={i} className="flex items-center gap-3 text-white/80 font-medium">
-                <div className="w-1.5 h-1.5 bg-white/50 rounded-full"></div>
-                {service}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="max-w-[1400px] mx-auto mt-8">
-          <div className="bg-white text-black p-12 md:p-24 border border-white/20 text-center flex flex-col items-center">
-            <h2 className="text-3xl md:text-5xl font-light tracking-tighter mb-4 max-w-2xl">
-              Start Your Next Development Project
-            </h2>
-            <p className="text-black/60 mb-8 max-w-xl text-lg">
-              Whether you're looking for a top-rated interior designer for a home renovation or a full-scale architectural firm for a commercial build, answer three quick questions to secure your free consultation and quote.
-            </p>
-            <button 
-              onClick={scrollToQuiz}
-              className="bg-black text-white px-8 py-4 text-xs font-bold tracking-[0.2em] uppercase hover:bg-black/80 transition-colors"
-            >
-              Get My Free Consultation
-            </button>
-          </div>
-        </section>
       </main>
+
+      {/* Footer */}
+      <footer className="w-full max-w-[1400px] mx-auto px-6 md:px-12 py-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-white/40 tracking-widest uppercase relative z-10">
+        <p>&copy; {new Date().getFullYear()} Studio Visionary. All rights reserved.</p>
+        <div className="flex gap-6">
+          <a href="/privacy-policy" className="hover:text-white transition-colors">Privacy</a>
+          <a href="/terms" className="hover:text-white transition-colors">Terms</a>
+        </div>
+      </footer>
     </div>
   );
 }
