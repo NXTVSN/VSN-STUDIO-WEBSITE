@@ -10,10 +10,10 @@ export function Preloader({ onComplete }: { onComplete: () => void }) {
     // Phase 2: Box fades out, Home draws in (3.0s-4.5s)
     // Phase 3: Home fills, then loader fades out (4.5s-5.5s)
     
-    const t1 = setTimeout(() => setPhase(1), 1500);
-    const t2 = setTimeout(() => setPhase(2), 3000);
-    const t3 = setTimeout(() => setPhase(3), 4500);
-    const t4 = setTimeout(() => onComplete(), 5500);
+    const t1 = setTimeout(() => setPhase(1), 1350);
+    const t2 = setTimeout(() => setPhase(2), 2700);
+    const t3 = setTimeout(() => setPhase(3), 4050);
+    const t4 = setTimeout(() => onComplete(), 5000);
 
     return () => {
       clearTimeout(t1);

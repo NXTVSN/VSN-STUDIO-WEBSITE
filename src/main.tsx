@@ -5,6 +5,7 @@ import SeoLanding from './SeoLanding.tsx';
 import ThankYou from './ThankYou.tsx';
 import PrivacyPolicy from './PrivacyPolicy.tsx';
 import TermsOfService from './TermsOfService.tsx';
+import Contact from './Contact.tsx';
 import './index.css';
 
 const path = window.location.pathname;
@@ -15,6 +16,7 @@ createRoot(document.getElementById('root')!).render(
      path.startsWith('/thank-you') ? <ThankYou /> : 
      path === '/privacy-policy' ? <PrivacyPolicy /> : 
      path === '/terms' ? <TermsOfService /> : 
+     path === '/contact' ? <Contact /> : 
      <App />}
   </StrictMode>,
 );

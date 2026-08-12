@@ -318,6 +318,12 @@ export default function App() {
             >
               START A PROJECT
             </button>
+            <a 
+              href="/contact"
+              className="bg-[#0f2c59] text-white px-4 py-2 rounded-full hover:bg-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all hidden md:block shadow-lg border border-[#1a3a6e]"
+            >
+              CONTACT
+            </a>
             <button aria-label="Menu" className="md:hidden" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu className="w-5 h-5" />
             </button>
@@ -377,6 +383,12 @@ export default function App() {
               >
                 START A PROJECT
               </button>
+              <a 
+                href="/contact"
+                className="bg-[#0f2c59] text-white px-6 py-4 rounded-full hover:bg-[#1a3a6e] transition-all text-center mt-4 border border-[#1a3a6e]"
+              >
+                CONTACT
+              </a>
             </div>
             <button 
               className="absolute top-6 right-6 p-2 text-white/70 hover:text-white"
@@ -451,6 +463,13 @@ export default function App() {
                 START A PROJECT
                 <ArrowUpRight className="w-3 h-3 md:w-4 md:h-4 opacity-80 group-hover/btn:rotate-45 transition-transform" />
               </button>
+              <a 
+                href="/contact"
+                className="group/btn flex items-center gap-2 md:gap-3 text-[8px] md:text-[10px] font-bold tracking-[0.2em] uppercase bg-[#0f2c59] text-white px-4 md:px-5 py-2.5 md:py-3 rounded-full hover:bg-[#0c244a] transition-all border border-white/10"
+              >
+                CONTACT
+                <ArrowUpRight className="w-3 h-3 md:w-4 md:h-4 opacity-80 group-hover/btn:rotate-45 transition-transform" />
+              </a>
             </div>
           </div>
 

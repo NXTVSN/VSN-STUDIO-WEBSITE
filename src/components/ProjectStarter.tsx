@@ -252,7 +252,7 @@ export function ProjectStarter({ isOpen, onClose }: ProjectStarterProps) {
                         Click below to open our calendar and secure your preferred time slot.
                       </p>
                       <button 
-                        onClick={() => window.open('https://calendly.com', '_blank')}
+                        onClick={() => window.open('https://calendly.com/nextvisionarydesign/30min', '_blank')}
                         className="bg-white text-black px-6 py-3 rounded-full text-sm font-bold tracking-widest uppercase hover:bg-white/90 transition-colors flex items-center gap-2"
                       >
                         Open Calendar <ArrowUpRight className="w-4 h-4" />

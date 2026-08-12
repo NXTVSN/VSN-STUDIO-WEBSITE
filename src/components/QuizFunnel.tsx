@@ -6,7 +6,8 @@ const PROJECT_TYPES = [
   'Home Renovation',
   'Custom Home / New Build',
   'Commercial Space',
-  'Interior & Branding'
+  'Interior & Branding',
+  'Visual Package'
 ];
 
 const BUDGETS = [
