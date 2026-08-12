@@ -548,20 +548,20 @@ export default function App() {
             </AnimatePresence>
             
             {/* Slideshow Controls */}
-            <div className="absolute inset-0 flex items-center justify-between p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-              <button 
+            <div className="absolute inset-0 flex items-center justify-between p-4 md:p-6 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-20 pointer-events-none">
+              <button
                 onClick={prevSlide}
                 aria-label="Previous Project"
-                className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-white hover:text-black transition-colors"
+                className="w-8 h-8 md:w-12 md:h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 text-white hover:bg-white hover:text-black transition-colors pointer-events-auto"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
               </button>
-              <button 
+              <button
                 onClick={nextSlide}
                 aria-label="Next Project"
-                className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-white hover:text-black transition-colors"
+                className="w-8 h-8 md:w-12 md:h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 text-white hover:bg-white hover:text-black transition-colors pointer-events-auto"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
               </button>
             </div>
 
