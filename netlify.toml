@@ -6,15 +6,27 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
-# VSN Leads CRM (installable iPhone app) lives at /crm
+# VSN Studio — private workspace (installable iPhone app) at /studio
 [[redirects]]
-  from = "/crm"
-  to = "/crm/index.html"
+  from = "/studio"
+  to = "/studio/index.html"
+  status = 200
+
+# Legacy CRM path → Studio
+[[redirects]]
+  from = "/crm/*"
+  to = "/studio/"
+  status = 301
+
+# Client-facing proposal links: /p/<token>
+[[redirects]]
+  from = "/p/*"
+  to = "/p/index.html"
   status = 200
 
 [[redirects]]
-  from = "/api/crm/*"
-  to = "/.netlify/functions/crm-api/:splat"
+  from = "/api/studio/*"
+  to = "/.netlify/functions/studio-api/:splat"
   status = 200
 
 # SPA fallback so client-side routes like /campaign resolve
