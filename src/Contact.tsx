@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, ArrowRight } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
+import { submitNetlifyForm, trackPixel } from './lib/submitForm';
 
 export default function Contact() {
   const [name, setName] = useState('');
@@ -8,6 +9,7 @@ export default function Contact() {
   const [phone, setPhone] = useState('');
   const [projectDetails, setProjectDetails] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const isSubmitting = useRef(false);
 
   useEffect(() => {
@@ -18,24 +20,21 @@ export default function Contact() {
     e.preventDefault();
     if (isSubmitting.current) return;
     isSubmitting.current = true;
+    setIsSending(true);
 
-    const formData = new URLSearchParams();
-    formData.append('form-name', 'contact');
-    formData.append('bot-field', '');
-    formData.append('name', name);
-    formData.append('email', email);
-    formData.append('phone', phone);
-    formData.append('projectDetails', projectDetails);
+    // Resilient submit (fetch w/ timeout → sendBeacon → retry later). Never blocks the visitor.
+    await submitNetlifyForm({
+      'form-name': 'contact',
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      projectDetails: projectDetails.trim(),
+      source: 'contact-page',
+      page: window.location.pathname + window.location.search,
+    });
+    trackPixel('Contact');
 
-    try {
-      await fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData.toString(),
-        keepalive: true
-      });
-    } catch (e) {}
-
+    setIsSending(false);
     setIsSubmitted(true);
   };
 
@@ -136,6 +135,8 @@ export default function Contact() {
                       <input
                         type="text"
                         id="name"
+                        name="name"
+                        autoComplete="name"
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -151,6 +152,9 @@ export default function Contact() {
                       <input
                         type="email"
                         id="email"
+                        name="email"
+                        inputMode="email"
+                        autoComplete="email"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -166,6 +170,9 @@ export default function Contact() {
                       <input
                         type="tel"
                         id="phone"
+                        name="phone"
+                        inputMode="tel"
+                        autoComplete="tel"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         className="w-full bg-transparent border-b border-white/20 py-3 text-sm focus:outline-none focus:border-white transition-colors"
@@ -190,10 +197,11 @@ export default function Contact() {
 
                     <button
                       type="submit"
-                      className="w-full bg-white text-black px-6 py-4 mt-4 text-xs font-bold tracking-widest uppercase hover:bg-white/90 transition-colors flex justify-center items-center gap-2 group rounded-full"
+                      disabled={isSending}
+                      aria-busy={isSending}
+                      className="w-full bg-white text-black px-6 py-4 mt-4 text-xs font-bold tracking-widest uppercase hover:bg-white/90 disabled:opacity-60 transition-colors flex justify-center items-center gap-2 group rounded-full"
                     >
-                      SEND INQUIRY
-                      <ArrowRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                      {isSending ? (<>SENDING… <Loader2 className="w-4 h-4 animate-spin" /></>) : (<>SEND INQUIRY <ArrowRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" /></>)}
                     </button>
                   </motion.form>
                 )}

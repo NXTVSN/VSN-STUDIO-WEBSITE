@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { submitNetlifyForm, retryPendingSubmission, trackPixel } from './lib/submitForm';
 
 export default function ThankYou() {
   const [params, setParams] = useState({ name: '', email: '', projectType: '' });
@@ -14,6 +15,9 @@ export default function ThankYou() {
     });
     
     document.title = "Thank You | Studio Visionary";
+    // If the lead submission didn't confirm before we navigated here (slow/blocked in-app
+    // browsers), flush it now.
+    retryPendingSubmission();
   }, []);
 
   // When the visitor books inside the embedded Calendly, log the booking to Netlify Forms
@@ -24,23 +28,15 @@ export default function ThankYou() {
       const data = e.data;
       if (!data || data.event !== 'calendly.event_scheduled') return;
       const urlParams = new URLSearchParams(window.location.search);
-      const body = new URLSearchParams();
-      body.append('form-name', 'booking');
-      body.append('bot-field', '');
-      body.append('name', urlParams.get('name') || '');
-      body.append('email', urlParams.get('email') || '');
-      body.append('event_uri', data.payload?.event?.uri || '');
-      body.append('invitee_uri', data.payload?.invitee?.uri || '');
-      body.append('page', window.location.pathname);
-      try {
-        fetch('/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: body.toString(),
-          keepalive: true
-        });
-      } catch (err) {}
-      if ((window as any).fbq) (window as any).fbq('track', 'Schedule');
+      submitNetlifyForm({
+        'form-name': 'booking',
+        name: urlParams.get('name') || '',
+        email: urlParams.get('email') || '',
+        event_uri: data.payload?.event?.uri || '',
+        invitee_uri: data.payload?.invitee?.uri || '',
+        page: window.location.pathname,
+      });
+      trackPixel('Schedule');
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
+import { submitNetlifyForm, trackPixel } from '../lib/submitForm';
 
 const PROJECT_TYPES = [
   'Home Renovation',
@@ -36,6 +37,7 @@ export function QuizFunnel() {
   const [phone, setPhone] = useState('');
   
   const isSubmitting = useRef(false);
+  const [isSending, setIsSending] = useState(false);
   const currentStepRef = useRef(1);
 
   useEffect(() => {
@@ -54,38 +56,33 @@ export function QuizFunnel() {
 
   const isStep4Valid = name.length > 1 && /^\S+@\S+\.\S+$/.test(email) && phone.replace(/\D/g, '').length >= 7;
 
-  const handleSubmit = async () => {
-    if (isSubmitting.current) return;
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (isSubmitting.current || !isStep4Valid) return;
     isSubmitting.current = true;
+    setIsSending(true);
 
     const description = `Project: ${projectType} | Budget: ${budget} | Timeline: ${timeline}`;
-    
-    const formData = new URLSearchParams();
-    formData.append('form-name', 'lead');
-    formData.append('bot-field', '');
-    formData.append('name', name);
-    formData.append('email', email);
-    formData.append('phone', phone);
-    formData.append('project_type', projectType);
-    formData.append('budget', budget);
-    formData.append('timeline', timeline);
-    formData.append('description', description);
 
-    // Await the submission (with keepalive) so navigating to /thank-you can't cancel it.
-    try {
-      await fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData.toString(),
-        keepalive: true
-      });
-    } catch (e) {}
+    // Resilient submit: fetch w/ timeout → sendBeacon → retry on /thank-you.
+    // Works inside Instagram / Facebook / TikTok in-app browsers.
+    const confirmed = await submitNetlifyForm({
+      'form-name': 'lead',
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      project_type: projectType,
+      budget,
+      timeline,
+      description,
+      source: 'quiz',
+      page: typeof window !== 'undefined' ? window.location.pathname + window.location.search : '',
+    });
 
-    if (typeof window !== 'undefined' && (window as any).fbq) {
-      (window as any).fbq('track', 'Lead');
-    }
+    trackPixel('Lead');
 
-    window.location.href = `/thank-you?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&projectType=${encodeURIComponent(projectType)}`;
+    const q = new URLSearchParams({ name: name.trim(), email: email.trim(), projectType, sent: confirmed ? '1' : '0' });
+    window.location.assign(`/thank-you?${q.toString()}`);
   };
 
   const getPercent = () => {
@@ -187,15 +184,18 @@ export function QuizFunnel() {
         We'll confirm your free 30-minute consultation and prepare an initial quote for your {projectType.toLowerCase() || 'project'}.
       </p>
       
-      <div className="space-y-4 mb-8">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4 mb-8">
         <div>
           <label className="sr-only">Name</label>
           <input 
             type="text" 
+            name="name"
             placeholder="Name" 
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="name"
+            enterKeyHint="next"
+            required
             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition-colors"
           />
         </div>
@@ -203,10 +203,14 @@ export function QuizFunnel() {
           <label className="sr-only">Email</label>
           <input 
             type="email" 
+            name="email"
             placeholder="Email" 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
+            inputMode="email"
+            enterKeyHint="next"
+            required
             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition-colors"
           />
         </div>
@@ -214,22 +218,28 @@ export function QuizFunnel() {
           <label className="sr-only">Phone</label>
           <input 
             type="tel" 
+            name="phone"
             placeholder="Phone Number" 
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             autoComplete="tel"
+            inputMode="tel"
+            enterKeyHint="send"
+            required
             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition-colors"
           />
         </div>
-      </div>
 
       <button
-        onClick={handleSubmit}
-        disabled={!isStep4Valid}
+        type="submit"
+        disabled={!isStep4Valid || isSending}
+        aria-busy={isSending}
+        style={{ marginTop: '2rem' }}
         className="w-full bg-white text-black border border-transparent font-bold tracking-widest uppercase py-4 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1a3a6e] active:bg-[#1a3a6e] hover:text-white hover:border-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all duration-300 flex justify-center items-center gap-2 text-xs"
       >
-        GET MY FREE CONSULTATION <ArrowRight className="w-4 h-4" />
+        {isSending ? (<>SENDING… <Loader2 className="w-4 h-4 animate-spin" /></>) : (<>GET MY FREE CONSULTATION <ArrowRight className="w-4 h-4" /></>)}
       </button>
+      </form>
       <p className="text-center text-[10px] text-white/40 uppercase tracking-widest mt-4">
         Free &middot; No obligation &middot; Takes 30 seconds
       </p>
