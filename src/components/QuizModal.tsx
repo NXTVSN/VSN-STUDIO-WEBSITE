@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { QuizFunnel } from './QuizFunnel';
@@ -16,6 +16,11 @@ interface QuizModalProps {
  * - locks page scroll behind it so touch-scrolling moves the form, not the page.
  */
 export function QuizModal({ isOpen, onClose }: QuizModalProps) {
+  // Keep the latest onClose in a ref so the effect below doesn't re-run (and toggle body
+  // overflow) every time the parent re-renders with a fresh inline callback.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+
   useEffect(() => {
     if (!isOpen) return;
     const html = document.documentElement;
@@ -23,14 +28,14 @@ export function QuizModal({ isOpen, onClose }: QuizModalProps) {
     const prevHtml = html.style.overflow;
     document.body.style.overflow = 'hidden';
     html.style.overflow = 'hidden';
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
     window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = prevBody;
       html.style.overflow = prevHtml;
       window.removeEventListener('keydown', onKey);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   return (
     <AnimatePresence>

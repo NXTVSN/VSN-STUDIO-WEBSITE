@@ -19,6 +19,13 @@ const BUDGETS = [
   'Not sure yet'
 ];
 
+function validate(v: { name: string; email: string; phone: string }) {
+  if (v.name.length < 2) return { field: 'name', msg: 'Please enter your name.' };
+  if (!/^\S+@\S+\.\S+$/.test(v.email)) return { field: 'email', msg: 'Please enter a valid email address.' };
+  if (v.phone.replace(/\D/g, '').length < 7) return { field: 'phone', msg: 'Please enter a valid phone number.' };
+  return null;
+}
+
 const TIMELINES = [
   'As soon as possible',
   '1 – 3 months',
@@ -38,7 +45,25 @@ export function QuizFunnel() {
   
   const isSubmitting = useRef(false);
   const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState('');
   const currentStepRef = useRef(1);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Read whatever is actually in the inputs. Browser autofill (Safari/iPad "AutoFill Contact",
+  // Chrome address autofill, password managers) can populate fields without React ever seeing
+  // an onChange, which used to leave the submit button greyed out. The DOM is the source of truth.
+  const readFields = () => {
+    const f = formRef.current;
+    if (!f) return { name: name.trim(), email: email.trim(), phone: phone.trim() };
+    const get = (n: string) => (f.elements.namedItem(n) as HTMLInputElement | null)?.value ?? '';
+    return { name: get('name').trim(), email: get('email').trim(), phone: get('phone').trim() };
+  };
+  const syncFromDom = () => {
+    const v = readFields();
+    if (v.name !== name) setName(v.name);
+    if (v.email !== email) setEmail(v.email);
+    if (v.phone !== phone) setPhone(v.phone);
+  };
 
   useEffect(() => {
     currentStepRef.current = step;
@@ -54,11 +79,32 @@ export function QuizFunnel() {
     setStep(s => s + 1);
   };
 
-  const isStep4Valid = name.length > 1 && /^\S+@\S+\.\S+$/.test(email) && phone.replace(/\D/g, '').length >= 7;
+  const isStep4Valid = validate({ name: name.trim(), email: email.trim(), phone: phone.trim() }) === null;
+
+
+  // While the contact step is showing, keep React state in step with the DOM so autofilled
+  // values are reflected immediately (Safari doesn't reliably fire input events on autofill).
+  useEffect(() => {
+    if (step !== 4) return;
+    const id = window.setInterval(syncFromDom, 400);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, name, email, phone]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (isSubmitting.current || !isStep4Valid) return;
+    if (isSubmitting.current) return;
+
+    const v = readFields();
+    const problem = validate(v);
+    if (problem) {
+      setError(problem.msg);
+      syncFromDom();
+      const el = formRef.current?.elements.namedItem(problem.field) as HTMLInputElement | null;
+      el?.focus();
+      return;
+    }
+    setError('');
     isSubmitting.current = true;
     setIsSending(true);
 
@@ -68,9 +114,9 @@ export function QuizFunnel() {
     // Works inside Instagram / Facebook / TikTok in-app browsers.
     const confirmed = await submitNetlifyForm({
       'form-name': 'lead',
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
+      name: v.name,
+      email: v.email,
+      phone: v.phone,
       project_type: projectType,
       budget,
       timeline,
@@ -81,7 +127,7 @@ export function QuizFunnel() {
 
     trackPixel('Lead');
 
-    const q = new URLSearchParams({ name: name.trim(), email: email.trim(), projectType, sent: confirmed ? '1' : '0' });
+    const q = new URLSearchParams({ name: v.name, email: v.email, projectType, sent: confirmed ? '1' : '0' });
     window.location.assign(`/thank-you?${q.toString()}`);
   };
 
@@ -184,7 +230,7 @@ export function QuizFunnel() {
         We'll confirm your free 30-minute consultation and prepare an initial quote for your {projectType.toLowerCase() || 'project'}.
       </p>
       
-      <form onSubmit={handleSubmit} noValidate className="space-y-4 mb-8">
+      <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-4 mb-8">
         <div>
           <label className="sr-only">Name</label>
           <input 
@@ -192,7 +238,8 @@ export function QuizFunnel() {
             name="name"
             placeholder="Name" 
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => { setName(e.target.value); setError(''); }}
+            onBlur={syncFromDom}
             autoComplete="name"
             enterKeyHint="next"
             required
@@ -206,7 +253,8 @@ export function QuizFunnel() {
             name="email"
             placeholder="Email" 
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); setError(''); }}
+            onBlur={syncFromDom}
             autoComplete="email"
             inputMode="email"
             enterKeyHint="next"
@@ -221,7 +269,8 @@ export function QuizFunnel() {
             name="phone"
             placeholder="Phone Number" 
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => { setPhone(e.target.value); setError(''); }}
+            onBlur={syncFromDom}
             autoComplete="tel"
             inputMode="tel"
             enterKeyHint="send"
@@ -230,12 +279,15 @@ export function QuizFunnel() {
           />
         </div>
 
+      {error && (
+        <p role="alert" className="text-xs text-red-300 -mb-4">{error}</p>
+      )}
       <button
         type="submit"
-        disabled={!isStep4Valid || isSending}
+        disabled={isSending}
         aria-busy={isSending}
         style={{ marginTop: '2rem' }}
-        className="w-full bg-white text-black border border-transparent font-bold tracking-widest uppercase py-4 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1a3a6e] active:bg-[#1a3a6e] hover:text-white hover:border-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all duration-300 flex justify-center items-center gap-2 text-xs"
+        className={`w-full border font-bold tracking-widest uppercase py-4 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1a3a6e] active:bg-[#1a3a6e] hover:text-white hover:border-[#1a3a6e] hover:shadow-[0_0_15px_rgba(15,44,89,0.5)] transition-all duration-300 flex justify-center items-center gap-2 text-xs ${isStep4Valid ? 'bg-white text-black border-transparent' : 'bg-white/70 text-black border-transparent'}`}
       >
         {isSending ? (<>SENDING… <Loader2 className="w-4 h-4 animate-spin" /></>) : (<>GET MY FREE CONSULTATION <ArrowRight className="w-4 h-4" /></>)}
       </button>
