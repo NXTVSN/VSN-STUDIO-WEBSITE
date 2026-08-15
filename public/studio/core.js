@@ -153,8 +153,9 @@ export function layout(path, content) {
     <div class="shell">
       <aside class="sidebar">
         <div class="brand"><img src="/studio/icon-192.png" alt="" /><div><div class="b1">Studio Visionary</div><div class="b2">Workspace</div></div></div>
+        <button class="cmdk" id="cmdkBtn">Search or jump to… <span class="kbd">${isMac ? "⌘" : "Ctrl"} K</span></button>
         <nav class="nav">${items.map((i) => `<a href="${i.href}" class="${i.active ? "active" : ""}">${I[i.icon]}<span>${i.label}</span>${i.n ? `<span class="count">${i.n}</span>` : ""}</a>`).join("")}</nav>
-        <div class="foot">Private workspace · only you<br/><button class="linkbtn" id="logoutSide">Sign out</button></div>
+        <div class="foot">${installPrompt ? `<button class="btn ghost sm block install" id="installBtn">Install as Mac app</button>` : isStandalone ? "" : `<div class="install subtle" style="font-size:11px">Add to Dock: Safari → File → “Add to Dock”</div>`}<div style="margin-top:10px">Private workspace · only you<br/><button class="linkbtn" id="logoutSide">Sign out</button></div></div>
       </aside>
       <div class="main"><div class="page">${content}</div></div>
       <nav class="tabbar">${items.map((i) => `<a href="${i.href}" class="tab ${i.active ? "active" : ""}">${I[i.icon]}<span>${i.label}</span>${i.n ? `<span class="count">${i.n}</span>` : ""}</a>`).join("")}</nav>
@@ -173,7 +174,7 @@ function renderLogin($app) {
         <div class="err" id="loginErr">${esc(state.error)}</div>
         <button class="btn block" type="submit">Unlock <span class="arrow">↗</span></button>
       </form>
-      <p class="hint">Private. In Safari, tap Share → “Add to Home Screen” to install.</p>
+      <p class="hint">Private. iPhone: Safari → Share → “Add to Home Screen”.<br/>Mac: Safari → File → “Add to Dock” (or Chrome → Install).</p>
     </div>`;
   document.getElementById("loginForm").onsubmit = async (e) => {
     e.preventDefault(); const btn = e.target.querySelector("button"); btn.disabled = true;
@@ -184,6 +185,61 @@ function renderLogin($app) {
   };
 }
 
+/* ---------- desktop: install prompt, command palette, shortcuts ---------- */
+export const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
+export const isStandalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+let installPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installPrompt = e; render(); });
+window.addEventListener("appinstalled", () => { installPrompt = null; render(); });
+
+let paletteClose = null;
+export function openPalette() {
+  if (paletteClose) return;
+  const bg = document.createElement("div"); bg.className = "palette-bg";
+  bg.innerHTML = `<div class="palette"><input id="palIn" placeholder="Search leads, jobs, proposals — or type a command" autocomplete="off" /><div class="results" id="palRes"></div><div class="foot"><span><span class="kbd">↑↓</span> navigate</span><span><span class="kbd">↵</span> open</span><span><span class="kbd">esc</span> close</span></div></div>`;
+  document.body.appendChild(bg);
+  const close = () => { bg.remove(); paletteClose = null; document.removeEventListener("keydown", onKey, true); };
+  paletteClose = close;
+  bg.addEventListener("click", (e) => { if (e.target === bg) close(); });
+  const $in = bg.querySelector("#palIn"), $res = bg.querySelector("#palRes");
+  let items = [], sel = 0;
+  const actions = [
+    { t: "New lead", sub: "Create", icon: "plus", go: "#/lead/new" }, { t: "New job", sub: "Create", icon: "plus", go: "#/job/new" }, { t: "New proposal", sub: "Create", icon: "plus", go: "#/proposal/new" },
+    { t: "Overview", sub: "Go to", icon: "home", go: "#/" }, { t: "Leads", sub: "Go to", icon: "inbox", go: "#/leads" }, { t: "Jobs", sub: "Go to", icon: "jobs", go: "#/jobs" }, { t: "Proposals", sub: "Go to", icon: "doc", go: "#/proposals" }, { t: "Settings", sub: "Go to", icon: "gear", go: "#/settings" },
+    { t: "Sync leads from website", sub: "Action", icon: "refresh", run: () => loadAll({ forceLeads: true }) },
+  ];
+  const score = (hay, q) => { hay = hay.toLowerCase(); if (!q) return 1; if (hay.includes(q)) return 2 + (hay.startsWith(q) ? 1 : 0); const words = q.split(/\s+/); return words.every((w) => hay.includes(w)) ? 1 : 0; };
+  const build = (q) => {
+    q = q.trim().toLowerCase();
+    const leads = state.leads.map((l) => ({ t: l.name, sub: `Lead · ${LEAD_STATUS[l.status]}`, icon: "inbox", go: `#/lead/${encodeURIComponent(l.id)}`, hay: [l.name, l.email, l.phone, l.project_type, l.description].join(" ") }));
+    const jobs = state.jobs.map((j) => ({ t: j.title, sub: `Job · ${j.client?.name || ""}`, icon: "jobs", go: `#/job/${encodeURIComponent(j.id)}`, hay: [j.title, j.client?.name, j.site_address, j.project_type].join(" ") }));
+    const props = state.proposals.map((p) => ({ t: `${p.number} · ${p.client?.name || p.title}`, sub: `Proposal · ${PROP_STATUS[p.status]}`, icon: "doc", go: `#/proposal/${encodeURIComponent(p.id)}`, hay: [p.number, p.title, p.client?.name].join(" ") }));
+    const acts = actions.map((a) => ({ ...a, hay: a.t + " " + a.sub }));
+    const all = q ? [...leads, ...jobs, ...props, ...acts] : [...acts, ...leads.slice(0, 5), ...jobs.slice(0, 5), ...props.slice(0, 5)];
+    items = all.map((x) => ({ ...x, s: score(x.hay, q) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 40); sel = 0; paint();
+  };
+  const paint = () => { $res.innerHTML = items.length ? items.map((x, i) => `<div class="item ${i === sel ? "sel" : ""}" data-i="${i}">${I[x.icon] || ""}<span>${esc(x.t)}</span><span class="sub">${esc(x.sub)}</span></div>`).join("") : `<div class="empty">No matches</div>`; $res.querySelector(".sel")?.scrollIntoView({ block: "nearest" }); };
+  const pick = (i) => { const x = items[i]; if (!x) return; close(); if (x.run) x.run(); else go(x.go); };
+  const onKey = (e) => { if (e.key === "Escape") { e.preventDefault(); close(); } else if (e.key === "ArrowDown") { e.preventDefault(); sel = Math.min(items.length - 1, sel + 1); paint(); } else if (e.key === "ArrowUp") { e.preventDefault(); sel = Math.max(0, sel - 1); paint(); } else if (e.key === "Enter") { e.preventDefault(); pick(sel); } };
+  document.addEventListener("keydown", onKey, true);
+  $in.oninput = () => build($in.value);
+  $res.onclick = (e) => { const it = e.target.closest(".item"); if (it) pick(Number(it.dataset.i)); };
+  build(""); $in.focus();
+}
+document.addEventListener("keydown", (e) => {
+  if (!state.token) return;
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); paletteClose ? paletteClose() : openPalette(); return; }
+  if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "/") { const q = document.getElementById("q"); if (q) { e.preventDefault(); q.focus(); } else { e.preventDefault(); openPalette(); } return; }
+  if (e.key === "Escape") { const back = document.querySelector(".back"); if (back) back.click(); return; }
+  // g then l/j/p/o/s  → go
+  if (e.key === "g") { pendingG = true; clearTimeout(gTimer); gTimer = setTimeout(() => (pendingG = false), 900); return; }
+  if (pendingG) { pendingG = false; const map = { l: "#/leads", j: "#/jobs", p: "#/proposals", o: "#/", s: "#/settings" }; if (map[e.key]) { e.preventDefault(); go(map[e.key]); } return; }
+  if (e.key === "n") { const p = currentRoute().path; const map = { "/leads": "#/lead/new", "/jobs": "#/job/new", "/proposals": "#/proposal/new" }; if (map[p]) { e.preventDefault(); go(map[p]); } }
+});
+let pendingG = false, gTimer;
+
 /* ---------- render ---------- */
 export function render() {
   const $app = document.getElementById("app");
@@ -193,6 +249,8 @@ export function render() {
   if (typeof out === "string") { $app.innerHTML = layout(r.path, out); }
   else if (out && typeof out === "object") { $app.innerHTML = out.bare ? out.html : layout(r.path, out.html); out.mount?.($app); }
   const lo = document.getElementById("logoutSide"); if (lo) lo.onclick = logout;
+  const ck = document.getElementById("cmdkBtn"); if (ck) ck.onclick = openPalette;
+  const ib = document.getElementById("installBtn"); if (ib) ib.onclick = async () => { if (!installPrompt) return; installPrompt.prompt(); await installPrompt.userChoice.catch(() => {}); installPrompt = null; render(); };
 }
 
 export function boot() {

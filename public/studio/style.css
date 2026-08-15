@@ -122,7 +122,7 @@ h2.title { font-size: 26px; font-weight: 300; letter-spacing: -0.02em; line-heig
 .nav .count { margin-left: auto; font-size: 10px; background: #fff; color: #000; border-radius: 999px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; }
 .sidebar .foot { margin-top: auto; padding: 8px; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .main { flex: 1; min-width: 0; }
-.page { max-width: 1120px; margin: 0 auto; padding: calc(var(--sat) + 18px) 16px calc(var(--sab) + 96px); }
+.page { max-width: 1280px; margin: 0 auto; padding: calc(var(--sat) + 18px) 16px calc(var(--sab) + 96px); }
 .pagehead { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .pagehead .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 @media (min-width: 900px) {
@@ -161,6 +161,7 @@ h2.title { font-size: 26px; font-weight: 300; letter-spacing: -0.02em; line-heig
 .grid.two { grid-template-columns: repeat(2, 1fr); }
 .grid.three { grid-template-columns: repeat(3, 1fr); }
 @media (min-width: 900px) { .grid.cards { grid-template-columns: repeat(2, 1fr); } .grid.cards3 { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1300px) { .grid.cards { grid-template-columns: repeat(3, 1fr); } .section.grid.cards { grid-template-columns: repeat(2, 1fr); } .detail-grid { grid-template-columns: 1.4fr 1fr; } }
 .list { display: flex; flex-direction: column; gap: 10px; }
 .section { margin-top: 26px; }
 .section-head { display: flex; align-items: center; justify-content: space-between; margin: 0 2px 10px; }
@@ -283,3 +284,21 @@ h2.title { font-size: 26px; font-weight: 300; letter-spacing: -0.02em; line-heig
 .timeline { padding: 6px 16px 14px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
 .timeline div { display: flex; gap: 10px; align-items: baseline; color: var(--text-2); }
 .timeline b { color: var(--muted); font-weight: 500; font-size: 11px; min-width: 100px; }
+
+/* ---------- desktop extras: command palette, shortcuts, install ---------- */
+.kbd { display: inline-block; font: 600 10px/1 -apple-system, BlinkMacSystemFont, monospace; letter-spacing: .04em; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line-2); background: #141414; color: var(--text-2); vertical-align: middle; }
+.sidebar .cmdk { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line-2); background: #0e0e0e; color: var(--muted); font-size: 12px; width: 100%; text-align: left; }
+.sidebar .cmdk:hover { border-color: rgba(255,255,255,.3); color: var(--text-2); }
+.sidebar .cmdk .kbd { margin-left: auto; }
+.sidebar .install { margin: 10px 0 0; }
+.palette-bg { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 70; display: flex; align-items: flex-start; justify-content: center; padding: 12vh 16px 16px; }
+.palette { width: 100%; max-width: 640px; background: #111; border: 1px solid var(--line-2); border-radius: 18px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+.palette input { border: 0; border-radius: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 18px 20px; font-size: 18px; }
+.palette .results { max-height: 56vh; overflow: auto; padding: 8px; }
+.palette .grp { padding: 10px 12px 4px; }
+.palette .item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+.palette .item.sel, .palette .item:hover { background: var(--navy-2); }
+.palette .item .sub { color: var(--muted); font-size: 12px; margin-left: auto; white-space: nowrap; }
+.palette .item svg { width: 16px; height: 16px; opacity: .7; flex: 0 0 auto; }
+.palette .foot { display: flex; gap: 14px; padding: 10px 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+.palette .empty { border: 0; padding: 30px; }
