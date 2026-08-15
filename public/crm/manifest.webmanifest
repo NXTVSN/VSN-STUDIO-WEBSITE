@@ -1,0 +1,16 @@
+{
+  "name": "VSN Leads",
+  "short_name": "VSN Leads",
+  "description": "Lead CRM for Studio Visionary — leads from vsndesignstudio.com",
+  "id": "/crm/",
+  "start_url": "/crm/",
+  "scope": "/crm/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    { "src": "/crm/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/crm/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
