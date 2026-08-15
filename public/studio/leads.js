@@ -1,7 +1,28 @@
 import { state, route, esc, pill, fmtWhen, fmtFull, dueClass, todayStr, addDays, telHref, smsHref, mailHref, toast, patch, create, remove, find, upsert, loadAll, api, saveUI, persistSeen, confirmDanger, go, I, LEAD_STATUS, LEAD_ORDER, render } from "./core.js";
 
 const dueLabel = (date) => { if (!date) return ""; const c = dueClass(date); if (c === "today") return "Follow up today"; const lbl = new Date(date + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }); return c === "overdue" ? `Overdue · ${lbl}` : `Follow up ${lbl}`; };
-const srcLabel = (s) => (s === "lead" ? "Start-a-project form" : s === "contact" ? "Contact form" : s === "manual" ? "Added manually" : s);
+const srcLabel = (s) => (s === "lead" ? "Start-a-project form" : s === "contact" ? "Contact form" : s === "manual" ? "Added manually" : s === "calendly" ? "Calendly booking" : s);
+const consultLabel = (b) => {
+  if (!b) return "";
+  if (b.event_status === "canceled") return "Consult canceled";
+  if (!b.start_time) return "Consult booked";
+  const d = new Date(b.start_time);
+  return `Consult · ${d.toLocaleDateString(undefined, { month: "short", day: "numeric" })} ${d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+};
+const consultClass = (b) => (!b ? "" : b.event_status === "canceled" ? "c-lost" : new Date(b.start_time || 0) < new Date() ? "" : "c-booked");
+function bookingPanel(l) {
+  const b = l.booking; if (!b) return "";
+  const link = (href, label) => (href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${label} ↗</a>` : "—");
+  return `<div class="group">
+    <div class="g-title"><span class="eyebrow">Consultation</span>${pill(b.event_status === "canceled" ? "lost" : "booked", b.event_status === "canceled" ? "Canceled" : "Booked")}</div>
+    <div class="kv"><span class="k">When</span><span class="v">${b.start_time ? esc(fmtFull(b.start_time)) : `<span style="opacity:.6">Time pending${b.enrich_error ? " · " + esc(b.enrich_error) : state.settings.calendly_connected ? "" : " · add CALENDLY_TOKEN to pull details"}</span>`}</span></div>
+    ${b.event_name ? `<div class="kv"><span class="k">Event</span><span class="v">${esc(b.event_name)}</span></div>` : ""}
+    <div class="kv"><span class="k">Booked</span><span class="v">${esc(fmtFull(b.booked_at))}${b.source === "calendly" ? " · direct" : " · via site"}</span></div>
+    ${b.join_url ? `<div class="kv"><span class="k">Join</span><span class="v">${link(b.join_url, "Google Meet")}</span></div>` : b.location ? `<div class="kv"><span class="k">Where</span><span class="v">${esc(b.location)}</span></div>` : ""}
+    <div class="kv"><span class="k">Manage</span><span class="v" style="display:flex;gap:12px;justify-content:flex-end">${link(b.reschedule_url, "Reschedule")}${link(b.cancel_url, "Cancel")}${b.event_uri && !b.reschedule_url ? link("https://calendly.com/app/scheduled_events/user/me", "Open in Calendly") : ""}</span></div>
+    ${(b.answers || []).filter((x) => x.a).map((x) => `<div class="kv" style="padding-bottom:2px"><span class="k">${esc(x.q)}</span></div><div class="body-text">${esc(x.a)}</div>`).join("")}
+  </div>`;
+}
 
 export function leadCard(l) {
   const meta = [l.project_type, l.budget, l.timeline].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join("");
@@ -13,7 +34,7 @@ export function leadCard(l) {
       <div class="top"><div class="name">${esc(l.name)}</div><div class="when">${fmtWhen(l.created_at)}</div></div>
       ${meta ? `<div class="meta">${meta}</div>` : contact ? `<div class="meta">${contact}</div>` : ""}
       ${l.description ? `<div class="desc">${esc(l.description)}</div>` : ""}
-      <div class="foot">${pill(l.status, LEAD_STATUS[l.status])}${l.next_follow_up ? `<span class="pill ${dc === "overdue" ? "c-overdue" : dc === "today" ? "c-contacted" : ""}">${dueLabel(l.next_follow_up)}</span>` : ""}</div>
+      <div class="foot">${pill(l.status, LEAD_STATUS[l.status])}${l.booking ? `<span class="pill ${consultClass(l.booking)}">${esc(consultLabel(l.booking))}</span>` : ""}${l.next_follow_up ? `<span class="pill ${dc === "overdue" ? "c-overdue" : dc === "today" ? "c-contacted" : ""}">${dueLabel(l.next_follow_up)}</span>` : ""}</div>
     </a>`;
 }
 
@@ -24,7 +45,7 @@ function filtered(filter, q) {
     if (LEAD_ORDER.includes(filter) && l.status !== filter) return false;
     if (filter === "due" && !(l.next_follow_up && dueClass(l.next_follow_up) !== "upcoming" && !["won", "lost"].includes(l.status))) return false;
     if (!q) return true;
-    return [l.name, l.email, l.phone, l.project_type, l.budget, l.timeline, l.description, ...(l.notes || []).map((n) => n.text)].join(" ").toLowerCase().includes(q);
+    return [l.name, l.email, l.phone, l.project_type, l.budget, l.timeline, l.description, l.booking ? "consult booked" : "", ...(l.notes || []).map((n) => n.text)].join(" ").toLowerCase().includes(q);
   });
 }
 
@@ -112,6 +133,7 @@ route("/lead/:id", ({ id }) => {
         </div>
       </div>
       <div class="col">
+        ${bookingPanel(l)}
         <div class="group">
           <div class="g-title"><span class="eyebrow">Contact</span></div>
           <div class="kv"><span class="k">Phone</span><span class="v">${l.phone ? `<a href="${telHref(l.phone)}">${esc(l.phone)}</a>` : "—"}</span></div>

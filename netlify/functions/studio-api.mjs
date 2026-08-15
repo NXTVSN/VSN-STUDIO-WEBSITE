@@ -2,13 +2,18 @@
 // Auth: POST /api/studio/login {passcode} -> {token}; then Authorization: Bearer <token>
 // Collections (all auth): leads, jobs, proposals   GET /:col, POST /:col, GET/PATCH/DELETE /:col/:id
 //   GET /leads also syncs Netlify Forms submissions (?force=1 to bypass throttle)
+//   Calendly bookings: "booking" form submissions (from /thank-you) are merged onto the lead by email;
+//   if CALENDLY_TOKEN is set, bookings are enriched (time, join/cancel/reschedule links) and Calendly
+//   is polled directly so bookings made outside the site funnel still land in the pipeline.
 // Extras: GET/PUT /settings, POST /proposals/:id/send, POST /files (multipart) , GET /files/:id, DELETE /files/:id
 // Public (no auth): GET /public/proposal/:token, POST /public/proposal/:token/accept, GET /public/file/:id?sig=
-// Env: CRM_PASSCODE, NETLIFY_FORMS_TOKEN, SITE_ID (auto)
+// Env: CRM_PASSCODE, NETLIFY_FORMS_TOKEN, SITE_ID (auto), CALENDLY_TOKEN (optional personal access token)
 import { getStore } from "@netlify/blobs";
 
 const SITE_ID_FALLBACK = "9a8995ff-013e-41b3-b18e-2bdf8243cb1f";
 const FORM_NAMES = ["lead", "contact"];
+const BOOKING_FORM = "booking";
+const CALENDLY_LOOKBACK_DAYS = 90;
 const SYNC_MIN_INTERVAL_MS = 45_000;
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 90;
 const LEAD_STATUSES = ["new", "contacted", "booked", "proposal", "won", "lost"];
@@ -94,27 +99,130 @@ function normalizeSubmission(s) {
     created_at: s.created_at, status: "new", next_follow_up: null, notes: [], updated_at: s.created_at,
   };
 }
+const emailKey = (e) => String(e || "").trim().toLowerCase();
+function findLeadByEmail(db, email) {
+  const k = emailKey(email); if (!k) return null;
+  return Object.values(db.leads).filter((l) => emailKey(l.email) === k).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))[0] || null;
+}
+function attachBooking(db, { name, email, event_uri, invitee_uri, booked_at, source }) {
+  let lead = findLeadByEmail(db, email);
+  if (!lead) {
+    lead = { id: uid(), source: source || "calendly", name: (name || "").trim() || "Unknown", email: (email || "").trim(), phone: "", project_type: "", budget: "", timeline: "", description: "", created_at: booked_at || now(), status: "new", next_follow_up: null, notes: [], updated_at: booked_at || now() };
+    db.leads[lead.id] = lead;
+  }
+  const b = lead.booking || {};
+  const changed = !b.event_uri || (event_uri && b.event_uri !== event_uri);
+  lead.booking = { ...b, event_uri: event_uri || b.event_uri || "", invitee_uri: invitee_uri || b.invitee_uri || "", booked_at: b.booked_at || booked_at || now(), source: b.source || source || "site", ...(changed ? { enriched: false } : {}) };
+  if (["new", "contacted"].includes(lead.status)) lead.status = "booked";
+  lead.updated_at = now();
+  return { lead, changed };
+}
 async function syncFromForms(db, { force = false } = {}) {
   const token = process.env.NETLIFY_FORMS_TOKEN;
   const siteId = process.env.SITE_ID || SITE_ID_FALLBACK;
   if (!token) return { synced: false, reason: "NETLIFY_FORMS_TOKEN not set" };
   if (!force && Date.now() - (db.meta.last_sync || 0) < SYNC_MIN_INTERVAL_MS) return { synced: false, reason: "throttled" };
   const forms = await nf(`/sites/${siteId}/forms`, token);
-  let added = 0;
+  let added = 0, bookings = 0;
   const deleted = new Set(db.meta.deleted || []);
+  const seenBookings = new Set(db.meta.booking_subs || []);
+  const bookingSubs = [];
   for (const form of forms) {
-    if (!FORM_NAMES.includes(form.name)) continue;
+    if (![...FORM_NAMES, BOOKING_FORM].includes(form.name)) continue;
     for (let page = 1; ; page++) {
       const subs = await nf(`/forms/${form.id}/submissions?per_page=100&page=${page}`, token);
       for (const s of subs) {
+        if (form.name === BOOKING_FORM) { if (!seenBookings.has(s.id)) bookingSubs.push(s); continue; }
         const lead = normalizeSubmission({ ...s, form_name: form.name });
         if (!db.leads[lead.id] && !deleted.has(lead.id)) { db.leads[lead.id] = lead; added++; }
       }
       if (subs.length < 100) break;
     }
   }
+  // Merge booking submissions after leads so a same-batch lead + booking pair links up.
+  for (const s of bookingSubs.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))) {
+    const d = s.data || {};
+    if (d.event_uri && deleted.has(d.event_uri)) { seenBookings.add(s.id); continue; }
+    attachBooking(db, { name: d.name, email: d.email || s.email, event_uri: d.event_uri, invitee_uri: d.invitee_uri, booked_at: s.created_at, source: "site" });
+    seenBookings.add(s.id); bookings++;
+  }
+  db.meta.booking_subs = [...seenBookings].slice(-2000);
+  let calendly = null;
+  try { calendly = await syncFromCalendly(db); } catch (e) { calendly = { error: e.message }; }
   db.meta.last_sync = Date.now();
-  return { synced: true, added };
+  return { synced: true, added, bookings, calendly };
+}
+
+/* ---------- Calendly (optional: CALENDLY_TOKEN) ---------- */
+async function cal(pathOrUrl, token) {
+  const url = pathOrUrl.startsWith("http") ? pathOrUrl : `https://api.calendly.com${pathOrUrl}`;
+  const r = await fetch(url, { headers: { authorization: `Bearer ${token}` } });
+  if (!r.ok) throw new Error(`Calendly API ${r.status} for ${url.replace("https://api.calendly.com", "")}`);
+  return r.json();
+}
+function bookingFromCalendly(ev, inv) {
+  return {
+    event_uri: ev.uri, invitee_uri: inv?.uri || "", event_name: ev.name || "", start_time: ev.start_time || "", end_time: ev.end_time || "",
+    join_url: ev.location?.join_url || "", location: ev.location?.location || ev.location?.type || "",
+    cancel_url: inv?.cancel_url || "", reschedule_url: inv?.reschedule_url || "",
+    event_status: ev.status || "active", invitee_status: inv?.status || "",
+    answers: (inv?.questions_and_answers || []).map((q) => ({ q: q.question, a: q.answer })),
+    enriched: true, enriched_at: now(),
+  };
+}
+async function syncFromCalendly(db) {
+  const token = process.env.CALENDLY_TOKEN;
+  if (!token) return { enabled: false };
+  let enriched = 0, imported = 0, updated = 0;
+  // 1) Enrich bookings captured on the site that we haven't looked up yet.
+  for (const l of Object.values(db.leads)) {
+    const b = l.booking; if (!b || b.enriched || !b.event_uri) continue;
+    try {
+      const ev = (await cal(b.event_uri, token)).resource;
+      let inv = null;
+      if (b.invitee_uri) inv = (await cal(b.invitee_uri, token)).resource;
+      else { const invs = (await cal(`${b.event_uri}/invitees`, token)).collection || []; inv = invs.find((i) => emailKey(i.email) === emailKey(l.email)) || invs[0] || null; }
+      l.booking = { ...b, ...bookingFromCalendly(ev, inv) };
+      if (inv?.email && !l.email) l.email = inv.email;
+      if (inv?.name && (!l.name || l.name === "Unknown")) l.name = inv.name;
+      enriched++;
+    } catch (e) { l.booking = { ...b, enrich_error: e.message }; }
+  }
+  // 2) Poll Calendly for bookings that never went through the site (or to pick up cancellations).
+  const me = db.meta.calendly_user || (await cal("/users/me", token)).resource.uri;
+  db.meta.calendly_user = me;
+  const seen = db.meta.calendly_events || {};
+  const deleted = new Set(db.meta.deleted || []);
+  const min = new Date(Date.now() - CALENDLY_LOOKBACK_DAYS * 864e5).toISOString();
+  let next = `/scheduled_events?user=${encodeURIComponent(me)}&min_start_time=${encodeURIComponent(min)}&count=100&sort=start_time:desc`;
+  const byEvent = new Map(Object.values(db.leads).filter((l) => l.booking?.event_uri).map((l) => [l.booking.event_uri, l]));
+  while (next) {
+    const page = await cal(next, token);
+    for (const ev of page.collection || []) {
+      if (deleted.has(ev.uri)) continue; // owner deleted this lead — don't resurrect it
+      const prev = seen[ev.uri];
+      const lead = byEvent.get(ev.uri);
+      if (prev && prev === ev.updated_at && lead?.booking?.enriched) continue; // unchanged
+      const invs = (await cal(`${ev.uri}/invitees`, token)).collection || [];
+      if (lead) {
+        const inv = invs.find((i) => emailKey(i.email) === emailKey(lead.email)) || invs[0] || null;
+        lead.booking = { ...lead.booking, ...bookingFromCalendly(ev, inv) };
+        if (ev.status === "canceled" && lead.status === "booked") lead.status = "contacted";
+        lead.updated_at = now(); updated++;
+      } else {
+        for (const inv of invs) {
+          const { lead: l2 } = attachBooking(db, { name: inv.name, email: inv.email, event_uri: ev.uri, invitee_uri: inv.uri, booked_at: ev.created_at || inv.created_at, source: "calendly" });
+          l2.booking = { ...l2.booking, ...bookingFromCalendly(ev, inv) };
+          if (ev.status === "canceled" && l2.status === "booked") l2.status = "contacted";
+          byEvent.set(ev.uri, l2); imported++;
+        }
+      }
+      seen[ev.uri] = ev.updated_at;
+    }
+    next = page.pagination?.next_page || null;
+  }
+  db.meta.calendly_events = seen;
+  return { enabled: true, enriched, imported, updated };
 }
 
 /* ---------- helpers ---------- */
@@ -161,7 +269,11 @@ const collections = {
       if (b.delete_note_id) l.notes = (l.notes || []).filter((n) => n.id !== b.delete_note_id);
       if (b.job_id !== undefined) l.job_id = b.job_id || null;
     },
-    onDelete(db, id) { db.meta.deleted = [...new Set([...(db.meta.deleted || []), id])].slice(-5000); },
+    onDelete(db, id) {
+      const l = db.leads[id];
+      const keys = [id, ...(l?.booking?.event_uri ? [l.booking.event_uri] : [])];
+      db.meta.deleted = [...new Set([...(db.meta.deleted || []), ...keys])].slice(-5000);
+    },
     sort: byDate("created_at"),
   },
   jobs: {
@@ -383,7 +495,7 @@ async function handleFiles(req, id, url) {
 /* ---------- settings / dashboard ---------- */
 async function handleSettings(req) {
   const db = await loadDB();
-  if (req.method === "GET") return json({ settings: { ...DEFAULT_SETTINGS, ...db.settings } });
+  if (req.method === "GET") return json({ settings: { ...DEFAULT_SETTINGS, ...db.settings, calendly_connected: !!process.env.CALENDLY_TOKEN } });
   if (req.method === "PUT" || req.method === "PATCH") {
     const b = await req.json().catch(() => ({}));
     const s = { ...DEFAULT_SETTINGS, ...db.settings };
@@ -396,7 +508,7 @@ async function handleSettings(req) {
 }
 async function handleOverview() {
   const db = await loadDB();
-  return json({ leads: Object.values(db.leads).sort(collections.leads.sort), jobs: Object.values(db.jobs).sort(collections.jobs.sort), proposals: Object.values(db.proposals).sort(collections.proposals.sort), settings: { ...DEFAULT_SETTINGS, ...db.settings } });
+  return json({ leads: Object.values(db.leads).sort(collections.leads.sort), jobs: Object.values(db.jobs).sort(collections.jobs.sort), proposals: Object.values(db.proposals).sort(collections.proposals.sort), settings: { ...DEFAULT_SETTINGS, ...db.settings, calendly_connected: !!process.env.CALENDLY_TOKEN } });
 }
 
 /* ---------- router ---------- */
@@ -434,3 +546,5 @@ export default async (req) => {
 };
 
 export const config = { path: "/api/studio/*" };
+
+export const _internal = { syncFromForms, attachBooking, syncFromCalendly };

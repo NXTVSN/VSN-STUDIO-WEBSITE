@@ -16,8 +16,39 @@ export default function ThankYou() {
     document.title = "Thank You | Studio Visionary";
   }, []);
 
+  // When the visitor books inside the embedded Calendly, log the booking to Netlify Forms
+  // so it shows up on their lead in Studio (matched by email; enriched server-side).
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if (typeof e.origin !== 'string' || !e.origin.endsWith('calendly.com')) return;
+      const data = e.data;
+      if (!data || data.event !== 'calendly.event_scheduled') return;
+      const urlParams = new URLSearchParams(window.location.search);
+      const body = new URLSearchParams();
+      body.append('form-name', 'booking');
+      body.append('bot-field', '');
+      body.append('name', urlParams.get('name') || '');
+      body.append('email', urlParams.get('email') || '');
+      body.append('event_uri', data.payload?.event?.uri || '');
+      body.append('invitee_uri', data.payload?.invitee?.uri || '');
+      body.append('page', window.location.pathname);
+      try {
+        fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+          keepalive: true
+        });
+      } catch (err) {}
+      if ((window as any).fbq) (window as any).fbq('track', 'Schedule');
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+
   const firstName = params.name.split(' ')[0] || 'there';
-  const calendlyUrl = `https://calendly.com/nextvisionarydesign/30min?hide_gdpr_banner=1&name=${encodeURIComponent(params.name)}&email=${encodeURIComponent(params.email)}`;
+  const embedDomain = typeof window !== 'undefined' ? window.location.host : 'vsndesignstudio.com';
+  const calendlyUrl = `https://calendly.com/nextvisionarydesign/30min?hide_gdpr_banner=1&embed_domain=${encodeURIComponent(embedDomain)}&embed_type=Inline&name=${encodeURIComponent(params.name)}&email=${encodeURIComponent(params.email)}`;
 
   return (
     <div className="bg-[#111] min-h-screen text-white font-sans selection:bg-white/30 selection:text-white pb-20 relative overflow-hidden flex flex-col">

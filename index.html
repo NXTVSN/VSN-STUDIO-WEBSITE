@@ -58,6 +58,14 @@
       <textarea name="projectDetails"></textarea>
       <input type="text" name="bot-field" />
     </form>
+    <form name="booking" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <input type="text" name="event_uri" />
+      <input type="text" name="invitee_uri" />
+      <input type="text" name="page" />
+      <input type="text" name="bot-field" />
+    </form>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
