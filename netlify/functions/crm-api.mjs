@@ -122,7 +122,7 @@ async function syncFromForms(db, { force = false } = {}) {
       const subs = await nf(`/forms/${form.id}/submissions?per_page=100&page=${page}`, token);
       for (const s of subs) {
         const lead = normalizeSubmission({ ...s, form_name: form.name });
-        if (!db.leads[lead.id]) {
+        if (!db.leads[lead.id] && !(db.meta.deleted || []).includes(lead.id)) {
           db.leads[lead.id] = lead;
           added++;
         }
@@ -216,6 +216,7 @@ async function handleDeleteLead(id) {
   const db = await loadDB();
   if (!db.leads[id]) return json({ error: "Not found" }, 404);
   delete db.leads[id];
+  db.meta.deleted = [...new Set([...(db.meta.deleted || []), id])].slice(-5000); // keep synced leads from re-importing
   await saveDB(db);
   return json({ ok: true });
 }
