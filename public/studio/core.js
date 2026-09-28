@@ -143,9 +143,10 @@ const NAV = [
   ["#/leads", "Leads", "inbox", (c) => c.newLeads],
   ["#/jobs", "Jobs", "jobs", (c) => c.dueTasks],
   ["#/proposals", "Proposals", "doc", (c) => c.propAlerts],
+  ["#/pricing", "Pricing", "calc", () => 0],
   ["#/settings", "Settings", "gear", () => 0],
 ];
-const activeKey = (path) => (path.startsWith("/leads") || path.startsWith("/lead/") ? "#/leads" : path.startsWith("/job") ? "#/jobs" : path.startsWith("/proposal") ? "#/proposals" : path.startsWith("/settings") ? "#/settings" : "#/");
+const activeKey = (path) => (path.startsWith("/leads") || path.startsWith("/lead/") ? "#/leads" : path.startsWith("/job") ? "#/jobs" : path.startsWith("/proposal") ? "#/proposals" : path.startsWith("/pricing") ? "#/pricing" : path.startsWith("/settings") ? "#/settings" : "#/");
 export function layout(path, content) {
   const c = counts(); const act = activeKey(path);
   const items = NAV.map(([href, label, icon, cnt]) => ({ href, label, icon, n: cnt(c), active: act === href }));
